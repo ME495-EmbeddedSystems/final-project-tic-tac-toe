@@ -1,2 +1,69 @@
 #!/usr/bin/env python
+"""  A test node to move the end effector to the desired pose
 
+ SUBSCRIBERS:
+  +
+  +
+
+PUBLISHERS:
+  +
+  +
+
+"""
+
+import rospy
+
+from geometry_msgs.msg import Pose
+
+import intera_interface
+
+class Move2DesiredPose(object):
+
+    def __init__(self):
+        self._limb = intera_interface.Limb("right")
+
+        self.desiredEePose = Pose()
+        self.initialPose = self._limb.endpoint_pose()
+
+        self.desiredEePose.position.x = 0.0 + self.initialPose['position'].x
+        self.desiredEePose.position.y = 0.0 + self.initialPose['position'].y
+        self.desiredEePose.position.z = 0.0 + self.initialPose['position'].z
+
+        # self.desiredEePose.orientation.x = 0.0 + self.currentPose['orientation'].x
+        # self.desiredEePose.orientation.y = 0.0 + self.currentPose['orientation'].y
+        # self.desiredEePose.orientation.z = 0.0 + self.currentPose['orientation'].z
+        # self.desiredEePose.orientation.w = 0.0 + self.currentPose['orientation'].w
+
+        # self.desiredEePose.orientation.x = 1.0
+        # self.desiredEePose.orientation.y = 0.0
+        # self.desiredEePose.orientation.z = 0.0
+        # self.desiredEePose.orientation.w = 0.0
+
+        self.desiredEePose.orientation.x = 0.7071068
+        self.desiredEePose.orientation.y = 0.0
+        self.desiredEePose.orientation.z = 0.7071068
+        self.desiredEePose.orientation.w = 0.0
+
+
+    def advance(self):
+        joint_angles = self._limb.ik_request(self.desiredEePose)
+        # print(self.currentPose['position'].x)
+        self._limb.set_joint_positions(joint_angles)
+
+        self.currentEffort = self._limb.endpoint_effort()
+        print(self.currentEffort['force'].x)
+
+
+
+def main():
+    """ The main() function. """
+    rospy.init_node('move_to_desired_pose', anonymous=True)
+    eePoseController = Move2DesiredPose()
+    while not rospy.is_shutdown():
+        eePoseController.advance()
+
+if __name__ == '__main__':
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        pass
