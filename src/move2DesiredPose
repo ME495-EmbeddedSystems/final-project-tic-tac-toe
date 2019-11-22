@@ -21,37 +21,65 @@ class Move2DesiredPose(object):
 
     def __init__(self):
         self._limb = intera_interface.Limb("right")
+        self._gripper = intera_interface.Gripper()
 
+        self.initial_t = rospy.Time.now().to_sec()
+
+        self.targetEePose = Pose()
         self.desiredEePose = Pose()
         self.initialPose = self._limb.endpoint_pose()
 
-        self.desiredEePose.position.x = 0.0 + self.initialPose['position'].x
-        self.desiredEePose.position.y = 0.0 + self.initialPose['position'].y
-        self.desiredEePose.position.z = 0.0 + self.initialPose['position'].z
+        self.maneuver_time = 2.0;
+
+        self.targetEePose.position.x = 0.3 + self.initialPose['position'].x
+        self.targetEePose.position.y = 0.0 + self.initialPose['position'].y
+        self.targetEePose.position.z = 0.0 + self.initialPose['position'].z
 
         # self.desiredEePose.orientation.x = 0.0 + self.currentPose['orientation'].x
         # self.desiredEePose.orientation.y = 0.0 + self.currentPose['orientation'].y
         # self.desiredEePose.orientation.z = 0.0 + self.currentPose['orientation'].z
         # self.desiredEePose.orientation.w = 0.0 + self.currentPose['orientation'].w
 
-        # self.desiredEePose.orientation.x = 1.0
-        # self.desiredEePose.orientation.y = 0.0
-        # self.desiredEePose.orientation.z = 0.0
-        # self.desiredEePose.orientation.w = 0.0
+        self.targetEePose.orientation.x = 1.0
+        self.targetEePose.orientation.y = 0.0
+        self.targetEePose.orientation.z = 0.0
+        self.targetEePose.orientation.w = 0.0
 
-        self.desiredEePose.orientation.x = 0.7071068
-        self.desiredEePose.orientation.y = 0.0
-        self.desiredEePose.orientation.z = 0.7071068
-        self.desiredEePose.orientation.w = 0.0
+        # self.desiredEePose.orientation.x = 0.7071068
+        # self.desiredEePose.orientation.y = 0.0
+        # self.desiredEePose.orientation.z = 0.7071068
+        # self.desiredEePose.orientation.w = 0.0
 
 
     def advance(self):
+        t = rospy.Time.now().to_sec() - self.initial_t;
+        s = 3.0/(self.maneuver_time**2)*t**2 - 2.0/(self.maneuver_time**3)*t**3
+        if(t > self.maneuver_time):
+            s = 1
+        self.desiredEePose.position.x = self.initialPose['position'].x + s * (self.targetEePose.position.x - self.initialPose['position'].x)
+        self.desiredEePose.position.y = self.initialPose['position'].y + s * (self.targetEePose.position.y - self.initialPose['position'].y)
+        self.desiredEePose.position.z = self.initialPose['position'].z + s * (self.targetEePose.position.z - self.initialPose['position'].z)
+
+        self.desiredEePose.orientation = self.targetEePose.orientation
+
+        # print(self.desiredEePose)
+
+
         joint_angles = self._limb.ik_request(self.desiredEePose)
-        # print(self.currentPose['position'].x)
         self._limb.set_joint_positions(joint_angles)
 
-        self.currentEffort = self._limb.endpoint_effort()
-        print(self.currentEffort['force'].x)
+        #self.currentEffort = self._limb.endpoint_effort()
+        #print(self.currentEffort['force'].x)
+
+        # self.gripper_close()
+
+    def gripper_open(self):
+        self._gripper.open()
+        rospy.sleep(1.0)
+
+    def gripper_close(self):
+        self._gripper.close()
+        rospy.sleep(1.0)
 
 
 
@@ -59,6 +87,7 @@ def main():
     """ The main() function. """
     rospy.init_node('move_to_desired_pose', anonymous=True)
     eePoseController = Move2DesiredPose()
+    # eePoseController.gripper_close()
     while not rospy.is_shutdown():
         eePoseController.advance()
 
