@@ -23,7 +23,6 @@ def QuinticTimeScaling( Tf, t):
            + 6 * (1.0 * t / Tf) ** 5
 
 
-time_gap = 0.001
 Tf = 8
 
 class TrajGen(object):
