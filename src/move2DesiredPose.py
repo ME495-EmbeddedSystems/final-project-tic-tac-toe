@@ -31,9 +31,10 @@ class Move2DesiredPose(object):
 
         self.maneuver_time = 2.0;
 
-        self.targetEePose.position.x = 0.3 + self.initialPose['position'].x
+        self.targetEePose.position.x = +0.05 + self.initialPose['position'].x
         self.targetEePose.position.y = 0.0 + self.initialPose['position'].y
-        self.targetEePose.position.z = 0.0 + self.initialPose['position'].z
+        self.targetEePose.position.z = -0.0 + self.initialPose['position'].z
+
 
         # self.desiredEePose.orientation.x = 0.0 + self.currentPose['orientation'].x
         # self.desiredEePose.orientation.y = 0.0 + self.currentPose['orientation'].y
@@ -50,6 +51,7 @@ class Move2DesiredPose(object):
         # self.desiredEePose.orientation.z = 0.7071068
         # self.desiredEePose.orientation.w = 0.0
 
+        self.gripper_close()
 
     def advance(self):
         t = rospy.Time.now().to_sec() - self.initial_t;
