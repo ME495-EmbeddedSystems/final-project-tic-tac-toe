@@ -6,7 +6,7 @@
   +
 
 PUBLISHERS:
-  +
+  + /ee_wrench(geometry_msgs/WrenchStamped)
   +
 
 """
@@ -20,6 +20,7 @@ import intera_interface
 class Move2DesiredPose(object):
 
     def __init__(self):
+        # initializing the member variables
         self.wrenchPublisher = rospy.Publisher("/ee_wrench", WrenchStamped, queue_size=10)
         self.wrenchMsg = WrenchStamped()
 
@@ -35,23 +36,13 @@ class Move2DesiredPose(object):
         self.maneuver_time = 4.0;
 
         self.targetEePose.position.x = 0.0 + self.initialPose['position'].x
-        self.targetEePose.position.y = -0.1 + self.initialPose['position'].y
+        self.targetEePose.position.y = 0.0 + self.initialPose['position'].y
         self.targetEePose.position.z = 0.0 + self.initialPose['position'].z
-
-        # self.desiredEePose.orientation.x = 0.0 + self.currentPose['orientation'].x
-        # self.desiredEePose.orientation.y = 0.0 + self.currentPose['orientation'].y
-        # self.desiredEePose.orientation.z = 0.0 + self.currentPose['orientation'].z
-        # self.desiredEePose.orientation.w = 0.0 + self.currentPose['orientation'].w
 
         self.targetEePose.orientation.x = 1.0
         self.targetEePose.orientation.y = 0.0
         self.targetEePose.orientation.z = 0.0
         self.targetEePose.orientation.w = 0.0
-
-        # self.desiredEePose.orientation.x = 0.7071068
-        # self.desiredEePose.orientation.y = 0.0
-        # self.desiredEePose.orientation.z = 0.7071068
-        # self.desiredEePose.orientation.w = 0.0
 
         self.desiredEEForce = 7.5
         self.desiredZposInRightHand = 0.0
@@ -59,6 +50,7 @@ class Move2DesiredPose(object):
 
 
     def advance(self):
+        # joint commands are sent in this function
         t = rospy.Time.now().to_sec() - self.initial_t;
         s = 3.0/(self.maneuver_time**2)*t**2 - 2.0/(self.maneuver_time**3)*t**3
         self.currentPose = self._limb.endpoint_pose()
@@ -78,23 +70,9 @@ class Move2DesiredPose(object):
         self._limb.set_joint_positions(joint_angles)
 
     def forceControl(self):
+        # desired z position relative to the end effector is calculated with a simple P controller.
         self.currentEffort = self._limb.endpoint_effort()
         self.desiredZposInRightHand = self.desiredZposInRightHand + self.kP * (self.desiredEEForce - self.currentEffort['force'].z)
-
-        # self.currentPose = self._limb.endpoint_pose()
-        #
-        # self.desiredEePose.position.x = self.initialPose['position'].x
-        # self.desiredEePose.position.y = self.initialPose['position'].y
-        # self.desiredEePose.position.z = self.currentPose['position'].z - self.desiredZposInRightHand
-        #
-        # print(self.currentEffort['force'].z)
-
-        # self.desiredEePose.orientation = self.targetEePose.orientation
-
-        # joint_angles = self._limb.ik_request(self.desiredEePose)
-        # self._limb.set_joint_positions(joint_angles)
-
-
 
     def gripper_open(self):
         self._gripper.open()
@@ -105,7 +83,7 @@ class Move2DesiredPose(object):
         rospy.sleep(1.0)
 
     def publishWrench(self):
-
+        # publish WrecnhStamped for visualization purposes in Rviz
         self.currentEffort = self._limb.endpoint_effort()
 
         self.wrenchMsg.header.frame_id = "right_hand"
@@ -116,11 +94,7 @@ class Move2DesiredPose(object):
         self.wrenchMsg.wrench.torque.y = self.currentEffort['torque'].y
         self.wrenchMsg.wrench.torque.z = self.currentEffort['torque'].z
 
-
         self.wrenchPublisher.publish(self.wrenchMsg)
-
-
-
 
 def main():
     """ The main() function. """
