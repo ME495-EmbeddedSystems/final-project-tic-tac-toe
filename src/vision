@@ -19,28 +19,35 @@ from cv_bridge import CvBridge, CvBridgeError
 import rospy
 import intera_interface
 
-def game_state(img):
+def game_state(img_data, (edge_detection, window_name)):
     """The callback function to show image by using CvBridge and cv
+       and converts image to the gamestate
     """
+    #create a 2d array to hold the gamestate
+    gamestate = [["-","-","-"],["-","-","-"],["-","-","-"]]
+
+    #kernel used for noise removal
+    kernel =  np.ones((7,7),np.uint8)
+
     bridge = CvBridge()
     try:
-        cv_image = bridge.imgmsg_to_cv2(img_data, "bgr8")
+        cv_image = bridge.imgmsg_to_cv(img_data, "bgr8")
     except CvBridgeError, err:
         rospy.logerr(err)
         return
     if edge_detection == True:
-        gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+        gray = cv.cvtColor(cv_image, cv.COLOR_BGR2GRAY)
+        blurred = cv.GaussianBlur(gray, (3, 3), 0)
         # customize the second and the third argument, minVal and maxVal
-        # in function cv2.Canny if needed
-        get_edge = cv2.Canny(blurred, 10, 100)
+        # in function cv.Canny if needed
+        get_edge = cv.Canny(blurred, 10, 100)
         cv_image = np.hstack([get_edge])
     edge_str = "(Edge Detection)" if edge_detection else ''
     cv_win_name = ' '.join([window_name, edge_str])
-    cv2.namedWindow(cv_win_name, 0)
+    cv.namedWindow(cv_win_name, 0)
     # refresh the image on the screen
-    cv2.imshow(cv_win_name, cv_image)
-    cv2.waitKey(3)
+    cv.imshow(cv_win_name, cv_image)
+    cv.waitKey(3)
 
 def main():
     """Camera Display
@@ -102,7 +109,7 @@ def main():
 
     def clean_shutdown():
         print("Shutting down camera_display node.")
-        cv2.destroyAllWindows()
+        cv.destroyAllWindows()
 
     rospy.on_shutdown(clean_shutdown)
     rospy.loginfo("Camera_display node running. Ctrl-c to quit")
