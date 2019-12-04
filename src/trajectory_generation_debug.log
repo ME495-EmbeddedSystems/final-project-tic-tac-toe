@@ -1,0 +1,147 @@
+        self.center = np.array([])
+        self.target_list = []
+        self.draw_status_list = []
+        self.hold_init_time = None
+        self.line_init_time = None
+
+        self.current_target = np.array([])
+        self.current_draw_status = False
+        self.if_hold = False
+        self.object_2_draw = "idle"
+
+        self.line_init_pose = None
+
+        
+        
+        
+ Test 0: 
+ 
+    state 1 idle:
+        initialization:
+            self.current_target = self.update_current_pose()
+            self.current_draw_status = False
+        
+        
+        Update_c_o
+            center, object = "idle" update
+        
+        get_xy
+            return coord = current_target
+            
+        get_draw_status 
+            Return false
+        
+    State 2 idle:
+        Update_c_o
+         object = "cross", center = []
+        
+         setup cross_params: 
+            target_list, drawlist
+            current_target, pop target_list
+            draw_status, pop draw_status_list
+            line_init_time, line_init_pose
+            
+        get_xy:
+            update_coord
+        
+        get_draw_status:
+            return self.get_dr...
+        
+  
+    State 3 cross
+        updateco
+            insidedistthresh
+                nothing changes
+        get_xy
+             coord
+         draw_status
+
+    。。。
+    State 4 cross  (hit the first target)
+         updateco
+            insidedistthresh
+                if_hold = true
+                hold_init_time
+                current target, draw_status
+        get_xy
+             coord
+        
+        draw_status
+             return draw_status
+     
+    State 5 cross  (move down (hold))
+         updateco
+            insidedistthresh
+                if_hold = true
+                hold_init_time
+                current target, draw_status
+        get_xy
+             coord
+        
+        draw_status
+             return draw_status
+             
+    State 6 cross  (move down to bottom (hold))
+                        
+      updateco
+            rospy.Time.now().to_sec() - self.hold_init_time > HOLD_TIME
+            if_hold = false
+            hold_init_time = None 
+            line_init_time = current_time
+        get_xy
+            same current_target 
+        draw_status
+            same draw_status
+    
+    State 7 cross  (move to new point)
+                        
+      updateco
+        current_target, target_list
+        draw_status, draw_status_list
+        
+        get_xy
+            coord
+        draw_status
+            draw_status 
+            
+            
+            
+        
+    State 8 cross  (start move up to last point)
+                        
+      updateco
+            if_hold = true
+            hold_init_time = now()
+            current_target, target_list
+            draw_status, draw_status_list
+        
+        get_xy
+            coord
+        draw_status
+            draw_status 
+            
+            
+    State 9 cross  (at last point of moving up, about to switch to idle)
+                        
+      updateco
+        rospy.Time.now().to_sec() - self.hold_init_time > HOLD_TIME
+        if_hold = false
+        hold_time = none
+        
+        get_xy
+            coord
+        draw_status
+            draw_status 
+            
+            
+    state 10 (switch to idle)
+                        
+      updateco
+            get_next_object_center, object, center
+            set_up_idle_params, current_target, draw_status
+        get_xy
+            coord
+        draw_status
+            draw_status 
+            
+
