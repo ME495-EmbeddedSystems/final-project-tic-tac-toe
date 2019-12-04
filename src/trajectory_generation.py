@@ -60,7 +60,9 @@ class TrajGen(object):
                             print "current target: ", self.current_target, "| target_list: ", self.target_list
                             self.if_hold = 1
                             self.hold_init_time = rospy.Time.now().to_sec()
-                        
+                            self.line_init_time = rospy.Time.now().to_sec()
+                            self.line_init_pose = self.update_current_pose()
+
                         # If we need to travel horizontally
                         else:
                             self.if_hold = 0 #when if_hold = -1
