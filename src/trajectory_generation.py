@@ -12,10 +12,10 @@ def InsideDistThresh(pos_start, pos_end, DIST_THRE):
         return True
 
 
-TF = 2
-DIST_THRE = 0.02
-LINE_LENGTH = 0.2
-HOLD_TIME = 5.0
+TF = 3
+DIST_THRE = 0.005
+LINE_LENGTH = 0.08
+HOLD_TIME = 2.0
 
 class TrajGen(object):
     def __init__(self):
@@ -161,9 +161,6 @@ class TrajGen(object):
         self.current_target = self.update_current_pose()
         self.current_draw_status = False
         
-
-
-
     def generate_cross_targets_draws(self):
         '''
         Update target_list and draw status list for drawing a cross
@@ -185,7 +182,7 @@ class TrajGen(object):
         
         self.target_list = cross_target_poses
         #self.draw_status_list = [False, True, True, False, False, True, True, False]
-        #draw_status: -1 move up, 0 move horizontally, 1 move down
+        #draw_status: -1 move up, 0 move horizontally, 1 move down(force control)
         self.draw_status_list = [0, 1, 1, -1, 0, 1, 1, -1]
 
 
@@ -207,8 +204,8 @@ class TrajGen(object):
             pass
         elif self.object_2_draw == "cross":
             t = rospy.Time.now().to_sec() - self.line_init_time
-#            s = 10 * (1.0 * t / TF) ** 3 - 15 * (1.0 * t / TF) ** 4 + 6 * (1.0 * t / TF) ** 5
-            s = 3.0*(t/TF)**2 - 2.0*(t/TF)**3
+            s = 10 * (1.0 * t / TF) ** 3 - 15 * (1.0 * t / TF) ** 4 + 6 * (1.0 * t / TF) ** 5
+            # s = 3.0*(t/TF)**2 - 2.0*(t/TF)**3
             if t>TF:
                 s = 1
             coord = s * np.array( self.current_target ) + (1 - s) * np.array(self.line_init_pose)
