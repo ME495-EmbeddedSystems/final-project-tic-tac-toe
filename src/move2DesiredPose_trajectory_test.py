@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 """  A test node to move the end effector to the desired pose
+
  SUBSCRIBERS:
   +
   +
+
 PUBLISHERS:
   + /ee_wrench(geometry_msgs/WrenchStamped)
   +
+
 """
 
 import rospy
@@ -13,6 +16,8 @@ import rospy
 from geometry_msgs.msg import Pose, WrenchStamped
 
 import intera_interface
+
+from trajectory_generation import TrajGen
 
 class Move2DesiredPose(object):
 
@@ -34,7 +39,8 @@ class Move2DesiredPose(object):
 
         self.targetEePose.position.x = 0.0 + self.initialPose['position'].x
         self.targetEePose.position.y = 0.0 + self.initialPose['position'].y
-        self.targetEePose.position.z = 0.0 + self.initialPose['position'].z
+        self.targetEePose.position.z = -0.0 + self.initialPose['position'].z
+
 
         self.targetEePose.orientation.x = 1.0
         self.targetEePose.orientation.y = 0.0
@@ -45,22 +51,18 @@ class Move2DesiredPose(object):
         self.desiredZposInRightHand = 0.0
         self.kP = 60.0/10000000;
 
-
+        self.gripper_close()
     def advance(self):
         # joint commands are sent in this function
-        t = rospy.Time.now().to_sec() - self.initial_t;
-        s = 3.0/(self.maneuver_time**2)*t**2 - 2.0/(self.maneuver_time**3)*t**3
         self.currentPose = self._limb.endpoint_pose()
-        if(t > self.maneuver_time):
-            s = 1
-        self.desiredEePose.position.x = self.initialPose['position'].x + s * (self.targetEePose.position.x - self.initialPose['position'].x)
-        self.desiredEePose.position.y = self.initialPose['position'].y + s * (self.targetEePose.position.y - self.initialPose['position'].y)
-        # self.desiredEePose.position.z = self.initialPose['position'].z + s * (self.targetEePose.position.z - self.initialPose['position'].z)
-        self.desiredEePose.position.z = self.currentPose['position'].z - self.desiredZposInRightHand # force control
+       # self.desiredEePose.position.z = self.initialPose['position'].z + s * (self.targetEePose.position.z - self.initialPose['position'].z)
+        #self.desiredEePose.position.z = self.currentPose['position'].z - self.desiredZposInRightHand # force control
+        self.desiredEePose.position.z = self.currentPose['position'].z # force control
 
         self.desiredEePose.orientation = self.targetEePose.orientation
-
-        # print(self.desiredEePose.position)
+        
+        #Test
+        print("Received pose: ", self.desiredEePose.position)
 
 
         joint_angles = self._limb.ik_request(self.desiredEePose)
@@ -99,8 +101,13 @@ def main():
     eePoseController = Move2DesiredPose()
     # eePoseController.gripper_close()
     # eePoseController.gripper_open()
+    trajgen = TrajGen()
+
     while not rospy.is_shutdown():
-        eePoseController.forceControl()
+        trajgen.update_trajectory_status()
+        [eePoseController.desiredEePose.position.x, eePoseController.desiredEePose.position.y] = trajgen.get_xy()
+        draw_status = trajgen.get_draw_status() #TODO: use this for force control
+        #eePoseController.forceControl()
         eePoseController.advance()
         eePoseController.publishWrench()
         pass
