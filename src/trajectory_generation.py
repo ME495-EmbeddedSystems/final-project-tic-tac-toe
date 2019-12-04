@@ -37,13 +37,15 @@ class TrajGen(object):
 
         #Test
         current_pose = self.update_current_pose()
-        self.center = np.array([current_pose[0]+0.1, current_pose[1]+0.1])
+        self.center = np.array([current_pose[0]+0.0, current_pose[1]+0.0])
         self.object_2_draw = "cross"
         self.setup_cross_params()
                 
     def update_trajectory_status(self):
         '''
         Updates trajectory variable status, every time it is called in the force control loop. 
+        Key params: 
+            1. self.draw_status: -1 means moving up, 0 is moving horizontally, 1 is moving down (force control required)
         '''
         if self.if_hold != 1:
             
@@ -182,7 +184,9 @@ class TrajGen(object):
         cross_target_poses[7] = self.center + np.array([-1*delta_x,  1*delta_y])        #e-e
         
         self.target_list = cross_target_poses
-        self.draw_status_list = [False, True, True, False, False, True, True, False]
+        #self.draw_status_list = [False, True, True, False, False, True, True, False]
+        #draw_status: -1 move up, 0 move horizontally, 1 move down
+        self.draw_status_list = [0, 1, 1, -1, 0, 1, 1, -1]
 
 
     def update_current_pose(self):
