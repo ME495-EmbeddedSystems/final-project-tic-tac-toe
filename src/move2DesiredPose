@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 """  A test node to move the end effector to the desired pose
+
  SUBSCRIBERS:
   +
   +
+
 PUBLISHERS:
   + /ee_wrench(geometry_msgs/WrenchStamped)
   +
+
 """
 
 import rospy
