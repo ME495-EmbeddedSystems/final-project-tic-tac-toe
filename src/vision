@@ -35,19 +35,70 @@ def game_state(img_data, (edge_detection, window_name)):
     except CvBridgeError, err:
         rospy.logerr(err)
         return
-    if edge_detection == True:
-        gray = cv.cvtColor(cv_image, cv.COLOR_BGR2GRAY)
-        blurred = cv.GaussianBlur(gray, (3, 3), 0)
-        # customize the second and the third argument, minVal and maxVal
-        # in function cv.Canny if needed
-        get_edge = cv.Canny(blurred, 10, 100)
-        cv_image = np.hstack([get_edge])
-    edge_str = "(Edge Detection)" if edge_detection else ''
-    cv_win_name = ' '.join([window_name, edge_str])
-    cv.namedWindow(cv_win_name, 0)
-    # refresh the image on the screen
-    cv.imshow(cv_win_name, cv_image)
-    cv.waitKey(3)
+    # get the image width and height
+    img_width = img.shape[0]
+    img_height = img.shape[1]
+
+    # turn into grayscale
+    gray =  cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    # turn into thresholded binary
+    ret,thresh1 = cv.threshold(gray,127,255,cv.THRESH_BINARY)
+    #remove noise from binary
+    thresh1 = cv.morphologyEx(thresh1, cv.MORPH_OPEN, kernel)
+
+    #find and draw contours
+    im2, contours, hierarchy = cv.findContours(thresh1, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    cv.drawContours(img, contours, -1, (0,255,0), 15)
+
+    tileCount = 0
+    for cnt in contours:
+        # ignore small contours that are not tiles
+        if cv.contourArea(cnt) > 200000:
+                tileCount = tileCount+1
+
+                # get coordinates of tile
+                x,y,w,h = cv.boundingRect(cnt)
+                # create new image from binary, for further analysis. Trim off the edge that has a line
+                tile = thresh1[x+40:x+w-80,y+40:y+h-80]
+                # create new image from main image, so we can draw the contours easily
+                imgTile = img[x+40:x+w-80,y+40:y+h-80]
+
+                #determine the array indexes of the tile
+                tileX = int(round((float(x)/float(img_width))*3))
+                tileY = int(round((float(y)/float(img_height))*3))
+
+                # find contours in the tile image. RETR_TREE retrieves all of the contours and reconstructs a full hierarchy of nested contours.
+                im2, c, hierarchy = cv.findContours(tile, cv.RETR_TREE , cv.CHAIN_APPROX_SIMPLE)
+                for ct in c:
+                        # to prevent the tile finding itself as contour
+                        if cv.contourArea(ct) < 180000:
+                                cv.drawContours(imgTile, [ct], -1, (255,0,0), 15)
+                                #calculate the solitity
+                                area = cv.contourArea(ct)
+                                hull = cv.convexHull(ct)
+                                hull_area = cv.contourArea(hull)
+                                solidity = float(area)/hull_area
+
+                                # fill the gamestate with the right sign
+                                if(solidity > 0.5):
+                                        gamestate[tileX][tileY] = "O"
+                                else:
+                                        gamestate[tileX][tileY] = "X"
+
+    #print the gamestate
+    for line in gamestate:
+        linetxt = ""
+        for cel in line:
+                linetxt = linetxt + "|" + cel
+        print(linetxt)
+
+    # resize final image
+    res = cv.resize(img,None,fx=0.2, fy=0.2, interpolation = cv.INTER_CUBIC)
+
+    # display image
+    cv.imshow(window_name,res)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
 
 def main():
     """Camera Display
