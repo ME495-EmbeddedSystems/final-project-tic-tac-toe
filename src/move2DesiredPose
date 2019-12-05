@@ -15,6 +15,8 @@ import rospy
 
 from geometry_msgs.msg import Pose, WrenchStamped
 
+from trajectory_generation import TrajGen
+
 import intera_interface
 
 class Move2DesiredPose(object):
@@ -35,18 +37,21 @@ class Move2DesiredPose(object):
 
         self.maneuver_time = 4.0;
 
-        self.targetEePose.position.x = 0.0 + self.initialPose['position'].x
-        self.targetEePose.position.y = 0.0 + self.initialPose['position'].y
-        self.targetEePose.position.z = 0.0 + self.initialPose['position'].z
+        # self.targetEePose.position.x = 0.1 + self.initialPose['position'].x
+        # self.targetEePose.position.y = 0.1 + self.initialPose['position'].y
+        # self.targetEePose.position.z = 0.0 + self.initialPose['position'].z
 
         self.targetEePose.orientation.x = 1.0
         self.targetEePose.orientation.y = 0.0
         self.targetEePose.orientation.z = 0.0
         self.targetEePose.orientation.w = 0.0
 
-        self.desiredEEForce = 7.5
+        self.desiredEEForce = 6.5
         self.desiredZposInRightHand = 0.0
-        self.kP = 60.0/10000000;
+        self.kP = 80.0/10000000;
+
+        self.previousMode = 99
+        self.modeChanged = False
 
 
     def advance(self):
@@ -71,8 +76,11 @@ class Move2DesiredPose(object):
 
     def forceControl(self):
         # desired z position relative to the end effector is calculated with a simple P controller.
+        self.currentPose = self._limb.endpoint_pose()
         self.currentEffort = self._limb.endpoint_effort()
         self.desiredZposInRightHand = self.desiredZposInRightHand + self.kP * (self.desiredEEForce - self.currentEffort['force'].z)
+        self.desiredEePose.position.z = self.currentPose['position'].z - self.desiredZposInRightHand  # force control
+        # print(self.desiredEePose.position.z)
 
     def gripper_open(self):
         self._gripper.open()
@@ -96,17 +104,55 @@ class Move2DesiredPose(object):
 
         self.wrenchPublisher.publish(self.wrenchMsg)
 
+    def modeO(self):
+        if(self.modeChanged is True):
+            self.currentPose = self._limb.endpoint_pose()
+            self.desiredEePose.position.z = self.currentPose['position'].z
+            # print(self.desiredEePose.position.z)
+
+    def modeMinus1(self):
+        if(self.modeChanged is True):
+            self.currentPose = self._limb.endpoint_pose()
+            self.desiredEePose.position.z = self.currentPose['position'].z + 0.02
+            # print(self.desiredEePose.position.z)
+
 def main():
     """ The main() function. """
     rospy.init_node('move_to_desired_pose', anonymous=True)
     eePoseController = Move2DesiredPose()
+    trajectoryGenerator = TrajGen()
     # eePoseController.gripper_close()
     # eePoseController.gripper_open()
     while not rospy.is_shutdown():
-        eePoseController.forceControl()
-        eePoseController.advance()
+        trajectoryGenerator.update_trajectory_status()
+        [eePoseController.desiredEePose.position.x, eePoseController.desiredEePose.position.y] = trajectoryGenerator.get_xy()
+        eePoseController.desiredEePose.orientation = eePoseController.targetEePose.orientation
+
+        if(eePoseController.previousMode is not trajectoryGenerator.get_draw_status()):
+            eePoseController.modeChanged = True
+        else:
+            eePoseController.modeChanged = False
+
+        if(trajectoryGenerator.get_draw_status() == 1):
+            eePoseController.forceControl()
+        elif(trajectoryGenerator.get_draw_status() == 0):
+            eePoseController.modeO()
+        elif (trajectoryGenerator.get_draw_status() == -1):
+            eePoseController.modeMinus1()
+
+
+        eePoseController.previousMode = trajectoryGenerator.get_draw_status()
+
+        # eePoseController.desiredEePose.position.x = eePoseController.initialPose['position'].x
+        # eePoseController.desiredEePose.position.y = eePoseController.initialPose['position'].y
+        # eePoseController.desiredEePose.position.z = eePoseController.initialPose['position'].z
+        # eePoseController.forceControl()
+
+        joint_angles = eePoseController._limb.ik_request(eePoseController.desiredEePose)
+        eePoseController._limb.set_joint_positions(joint_angles)
+
         eePoseController.publishWrench()
-        pass
+        # print(eePoseController.wrenchMsg.wrench.force.z)
 
 if __name__ == '__main__':
     try:
