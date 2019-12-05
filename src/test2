@@ -9,7 +9,7 @@ gamestate = [["-","-","-"],["-","-","-"],["-","-","-"]]
 
 
 # Load a color image
-img = cv.imread("marked2.jpg")
+img = cv.imread("marked4.jpg")
 
 img_width = img.shape[0]
 img_height = img.shape[1]
@@ -17,11 +17,11 @@ img_height = img.shape[1]
 # turn to HSV
 hsv =  cv.cvtColor(img, cv.COLOR_BGR2HSV)
 
-# Define range of blue color in HSV
+# Define range of green color in HSV
 lower_green = np.array([36,0,0])
 upper_green = np.array([86,255,255])
 
-# Threshold HSV image to get only blue colors
+# Threshold HSV image to get only green colors
 mask = cv.inRange(hsv, lower_green, upper_green)
 
 # Blur mask
@@ -63,6 +63,20 @@ tape_crop = img[y:y+h, x:x+w]
 
 top_left_crop = img[y + 2*cm + buffer: y + 2*cm + 7*cm - 2*buffer,  x + 2*cm + buffer: x + 2*cm + 7*cm - buffer]
 
+# Find contours of edges
+edge = cv.Canny(top_left_crop, 30, 200)
+im2, contours, hierarchy = cv.findContours(edge, cv.RETR_EXTERNAL,cv.CHAIN_APPROX_NONE)
+
+# Find largest contour (the X or O)
+large_cnt_index = 0
+largest_peri = 0
+for i in range(len(contours)):
+    perimeter = cv.arcLength(contours[i],True)
+    if perimeter > largest_peri:
+        largest_peri = perimeter
+        large_cnt_index = i
+
+cv.drawContours(top_left_crop, contours, large_cnt_index, (255,0,0), 5)
 # Draw perimeter of the tape
 #cv.drawContours(img, contours, large_cnt_index, (255,0,0), 5)
 
