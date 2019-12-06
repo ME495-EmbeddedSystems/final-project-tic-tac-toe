@@ -41,14 +41,19 @@ class Move2DesiredPose(object):
         # self.targetEePose.position.y = 0.1 + self.initialPose['position'].y
         # self.targetEePose.position.z = 0.0 + self.initialPose['position'].z
 
-        self.targetEePose.orientation.x = 1.0
-        self.targetEePose.orientation.y = 0.0
+        # self.targetEePose.orientation.x = 1.0
+        # self.targetEePose.orientation.y = 0.0
+        # self.targetEePose.orientation.z = 0.0
+        # self.targetEePose.orientation.w = 0.0
+
+        self.targetEePose.orientation.x = -0.7071068
+        self.targetEePose.orientation.y = 0.7071068
         self.targetEePose.orientation.z = 0.0
         self.targetEePose.orientation.w = 0.0
 
-        self.desiredEEForce = 6.5
+        self.desiredEEForce = 7.5
         self.desiredZposInRightHand = 0.0
-        self.kP = 80.0/10000000;
+        self.kP = 80.0/10000000
 
         self.previousMode = 99
         self.modeChanged = False
@@ -113,7 +118,7 @@ class Move2DesiredPose(object):
     def modeMinus1(self):
         if(self.modeChanged is True):
             self.currentPose = self._limb.endpoint_pose()
-            self.desiredEePose.position.z = self.currentPose['position'].z + 0.02
+            self.desiredEePose.position.z = self.currentPose['position'].z + 0.015
             # print(self.desiredEePose.position.z)
 
 def main():
