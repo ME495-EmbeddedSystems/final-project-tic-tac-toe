@@ -5,7 +5,7 @@ import cv2 as cv
 #cap = cv.VideoCapture(2)
 
 #create a 2d array to hold the gamestate
-gamestate = [["-","-","-"],["-","-","-"],["-","-","-"]]
+gamestate = [0,0,0,0,0,0,0,0,0]
 
 
 # Load a grayscale image
@@ -38,19 +38,14 @@ for i in range(len(contours)):
 # get coordinates of tile
 x,y,w,h = cv.boundingRect(contours[large_cnt_index])
 
-#cv.drawContours(img, contours, large_cnt_index, (255,0,0), 2)
-
 # Origin adjustments
-#x -= 2
-#y -= 2
-#w += 4
-#h += 4
+x -= 3
+y -= 3
+w += 6
+h += 6
 
 # measure 1 cm in pixels
 cm = (w+h)/4
-
-print x,y,w,h
-print cm
 
 buffer = cm/2
 
@@ -58,87 +53,66 @@ tape_crop = img[y:y+h, x:x+w]
 
 # Crop frame for each board space
 top_left = img[y + 2*cm + buffer: y + 9*cm - buffer,  x + 2*cm + buffer: x + 9*cm - buffer]
-top_mid = img[y+2*cm + buffer: y + 9*cm - buffer,  x + 11*cm + buffer: x + 18*cm - buffer]
-top_right = img[y+2*cm + buffer: y + 9*cm - buffer,  x + 20*cm + buffer: x + 29*cm - buffer]
+top_mid = img[y+2*cm + buffer: y + 9*cm,  x + 11*cm + buffer: x + 18*cm - buffer]
+top_right = img[y+2*cm + buffer: y + 10*cm - buffer,  x + 19*cm + buffer: x + 28*cm - buffer]
 mid_left = img[y + 11*cm + buffer: y + 18*cm - buffer,  x + 2*cm: x + 9*cm - buffer]
 mid_mid = img[y+11*cm + buffer: y + 18*cm - buffer,  x + 11*cm + buffer: x + 18*cm - buffer]
-mid_right = img[y+11*cm + buffer: y + 18*cm - buffer,  x + 20*cm + buffer: x + 29*cm - buffer]
+mid_right = img[y+11*cm + 2*buffer: y + 18*cm,  x + 20*cm: x + 28*cm - buffer]
 bot_left = img[y + 20*cm + buffer: y + 29*cm - buffer,  x + 2*cm: x + 9*cm - buffer]
 bot_mid = img[y+20*cm + buffer: y + 29*cm - buffer,  x + 11*cm + buffer: x + 18*cm - buffer]
-bot_right = img[y+20*cm + 2*buffer: y + 29*cm - buffer,  x + 20*cm + 2*buffer: x + 29*cm - buffer]
+bot_right = img[y+20*cm + 2*buffer: y + 29*cm - buffer,  x + 20*cm + buffer: x + 29*cm - buffer]
 
 board = [top_left, top_mid, top_right, mid_left, mid_mid, mid_right, bot_left, bot_mid, bot_right]
-
-
-# Find contours of edges
-edge = cv.Canny(top_left, 30, 100)
 kernel = np.ones((4,4),np.uint8)
-dilation = cv.dilate(edge,kernel,iterations = 1)
-im2, contours, hierarchy = cv.findContours(dilation, cv.RETR_EXTERNAL,cv.CHAIN_APPROX_NONE)
 
+board_index = -1
 
-# Find largest contour (the X or O)
-large_cnt_index = 0
-largest_peri = 0
-for i in range(len(contours)):
-    perimeter = cv.arcLength(contours[i],True)
-    if perimeter > largest_peri:
-        largest_peri = perimeter
-        large_cnt_index = i
+for space in board:
 
-cv.drawContours(top_left, contours, large_cnt_index, (255,0,0), 3)
+    board_index += 1
 
-# Draw perimeter of the tape
-#cv.drawContours(img, contours, large_cnt_index, (255,0,0), 5)
+    # Find contours of edges
+    edge = cv.Canny(space, 30, 100)
 
-"""
-for cnt in contours:
-        #print(cv.contourArea(cnt))
-        # ignore small contours that are not tiles
-        if cv.contourArea(cnt) > 30:
+    # Dilate edges to fill in gaps
+    dilation = cv.dilate(edge,kernel,iterations = 1)
 
-                # get coordinates of tile
-                x,y,w,h = cv.boundingRect(cnt)
+    # Find contours in the board space
+    im2, contours, hierarchy = cv.findContours(dilation, cv.RETR_EXTERNAL,cv.CHAIN_APPROX_NONE)
 
-                # create new image from binary, for further analysis. Trim off the edge that has a line
-                tile = edges[x+40:x+w-80,y+40:y+h-80]
-                # create new image from main image, so we can draw the contours easily
-                imgTile = img[x+40:x+w-80,y+40:y+h-80]
+    # Find largest contour (the X or O)
+    large_cnt_index = 0
+    largest_peri = 0
+    for i in range(len(contours)):
+        perimeter = cv.arcLength(contours[i],True)
+        if perimeter > largest_peri:
+            largest_peri = perimeter
+            large_cnt_index = i
 
-                #determine the array indexes of the tile
-                tileX = int(round((float(x)/float(img_width))*3))
-                tileY = int(round((float(y)/float(img_height))*3))
+    cv.drawContours(space, contours, large_cnt_index, (255,0,0), 3)
+    largest_ct = contours[large_cnt_index]
 
-                # find contours in the tile image. RETR_TREE retrieves all of the contours and reconstructs a full hierarchy of nested contours.
-                _, c, hierarchy = cv.findContours(tile, cv.RETR_TREE , cv.CHAIN_APPROX_SIMPLE)
-                for ct in c:
-                        # to prevent the tile finding itself as contour
-                        if cv.contourArea(ct) < 18:
-                                cv.drawContours(imgTile, [ct], -1, (255,0,0), 15)
-                                #calculate the solitity
-                                area = cv.contourArea(ct)
-                                hull = cv.convexHull(ct)
-                                hull_area = cv.contourArea(hull)
-                                try:
-                                    solidity = float(area)/hull_area
-                                except ZeroDivisionError:
-                                    solidity = -100
+    # Determine if the space is filled by an X or O
+    if cv.contourArea(largest_ct) > 3500:
+        # Calculate the solitity
+        area = cv.contourArea(largest_ct)
+        hull = cv.convexHull(largest_ct)
+        hull_area = cv.contourArea(hull)
+        try:
+            solidity = float(area)/hull_area
+        except ZeroDivisionError:
+            solidity = -100
 
-                                # fill the gamestate with the right sign
-                                if(solidity > 0.5):
-                                        gamestate[tileX][tileY] = "O"
-                                elif(solidity < 0):
-                                        gamestate[tileX][tileY] = "-"
-                                else:
-                                        gamestate[tileX][tileY] = "X"
+        # fill the gamestate with the right sign
+        if(solidity > 0.5):
+                gamestate[board_index] = 2
+        else:
+                gamestate[board_index] = 1
 
 #print the gamestate
-for line in gamestate:
-        linetxt = ""
-        for cel in line:
-                linetxt = linetxt + cel
-        #print(linetxt)
-"""
+gamestate = np.reshape(gamestate, (3,3))
+print gamestate
+
 # resize final image
 res = cv.resize(top_left, None,fx=0.25, fy=0.25, interpolation = cv.INTER_CUBIC)
 

@@ -19,84 +19,126 @@ from cv_bridge import CvBridge, CvBridgeError
 import rospy
 import intera_interface
 
-def game_state(img_data, (edge_detection, window_name)):
+def get_game_state(img_data, (edge_detection, window_name)):
     """The callback function to show image by using CvBridge and cv
        and converts image to the gamestate
     """
+    #cap = cv.VideoCapture(2)
+
     #create a 2d array to hold the gamestate
-    gamestate = [["-","-","-"],["-","-","-"],["-","-","-"]]
+    gamestate = [0,0,0,0,0,0,0,0,0]
 
-    #kernel used for noise removal
-    kernel =  np.ones((7,7),np.uint8)
 
-    bridge = CvBridge()
-    try:
-        cv_image = bridge.imgmsg_to_cv(img_data, "bgr8")
-    except CvBridgeError, err:
-        rospy.logerr(err)
-        return
-    # get the image width and height
-    img_width = img.shape[0]
-    img_height = img.shape[1]
+    # Load a grayscale image
+    img = cv.imread('x5_g15.png', cv.IMREAD_GRAYSCALE)
+    # Crop top of image
+    img_crop = img[0:150, 0:900]
 
-    # turn into grayscale
-    gray =  cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    # turn into thresholded binary
-    ret,thresh1 = cv.threshold(gray,127,255,cv.THRESH_BINARY)
-    #remove noise from binary
-    thresh1 = cv.morphologyEx(thresh1, cv.MORPH_OPEN, kernel)
 
-    #find and draw contours
-    im2, contours, hierarchy = cv.findContours(thresh1, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    cv.drawContours(img, contours, -1, (0,255,0), 15)
+    # Define range of green color in grayscale
+    lower_green = 40
+    upper_green = 55
 
-    tileCount = 0
-    for cnt in contours:
-        # ignore small contours that are not tiles
-        if cv.contourArea(cnt) > 200000:
-                tileCount = tileCount+1
+    # Threshold image to get only green colors
+    mask = cv.inRange(img_crop, lower_green, upper_green)
 
-                # get coordinates of tile
-                x,y,w,h = cv.boundingRect(cnt)
-                # create new image from binary, for further analysis. Trim off the edge that has a line
-                tile = thresh1[x+40:x+w-80,y+40:y+h-80]
-                # create new image from main image, so we can draw the contours easily
-                imgTile = img[x+40:x+w-80,y+40:y+h-80]
+    # Find contours of edges
+    edged = cv.Canny(mask, 30, 200)
 
-                #determine the array indexes of the tile
-                tileX = int(round((float(x)/float(img_width))*3))
-                tileY = int(round((float(y)/float(img_height))*3))
+    im, contours, hierarchy = cv.findContours(edged, cv.RETR_EXTERNAL,cv.CHAIN_APPROX_NONE)
 
-                # find contours in the tile image. RETR_TREE retrieves all of the contours and reconstructs a full hierarchy of nested contours.
-                im2, c, hierarchy = cv.findContours(tile, cv.RETR_TREE , cv.CHAIN_APPROX_SIMPLE)
-                for ct in c:
-                        # to prevent the tile finding itself as contour
-                        if cv.contourArea(ct) < 180000:
-                                cv.drawContours(imgTile, [ct], -1, (255,0,0), 15)
-                                #calculate the solitity
-                                area = cv.contourArea(ct)
-                                hull = cv.convexHull(ct)
-                                hull_area = cv.contourArea(hull)
-                                solidity = float(area)/hull_area
+    # Find largest contour (the green tape)
+    large_cnt_index = 0
+    largest_peri = 0
+    for i in range(len(contours)):
+        perimeter = cv.arcLength(contours[i],True)
+        if perimeter > largest_peri:
+            largest_peri = perimeter
+            large_cnt_index = i
 
-                                # fill the gamestate with the right sign
-                                if(solidity > 0.5):
-                                        gamestate[tileX][tileY] = "O"
-                                else:
-                                        gamestate[tileX][tileY] = "X"
+    # get coordinates of tile
+    x,y,w,h = cv.boundingRect(contours[large_cnt_index])
+
+    # Origin adjustments
+    x -= 3
+    y -= 3
+    w += 6
+    h += 6
+
+    # measure 1 cm in pixels
+    cm = (w+h)/4
+
+    buffer = cm/2
+
+    tape_crop = img[y:y+h, x:x+w]
+
+    # Crop frame for each board space
+    top_left = img[y + 2*cm + buffer: y + 9*cm - buffer,  x + 2*cm + buffer: x + 9*cm - buffer]
+    top_mid = img[y+2*cm + buffer: y + 9*cm,  x + 11*cm + buffer: x + 18*cm - buffer]
+    top_right = img[y+2*cm + buffer: y + 10*cm - buffer,  x + 19*cm + buffer: x + 28*cm - buffer]
+    mid_left = img[y + 11*cm + buffer: y + 18*cm - buffer,  x + 2*cm: x + 9*cm - buffer]
+    mid_mid = img[y+11*cm + buffer: y + 18*cm - buffer,  x + 11*cm + buffer: x + 18*cm - buffer]
+    mid_right = img[y+11*cm + 2*buffer: y + 18*cm,  x + 20*cm: x + 28*cm - buffer]
+    bot_left = img[y + 20*cm + buffer: y + 29*cm - buffer,  x + 2*cm: x + 9*cm - buffer]
+    bot_mid = img[y+20*cm + buffer: y + 29*cm - buffer,  x + 11*cm + buffer: x + 18*cm - buffer]
+    bot_right = img[y+20*cm + 2*buffer: y + 29*cm - buffer,  x + 20*cm + buffer: x + 29*cm - buffer]
+
+    board = [top_left, top_mid, top_right, mid_left, mid_mid, mid_right, bot_left, bot_mid, bot_right]
+    kernel = np.ones((4,4),np.uint8)
+
+    board_index = -1
+
+    for space in board:
+
+        board_index += 1
+
+        # Find contours of edges
+        edge = cv.Canny(space, 30, 100)
+
+        # Dilate edges to fill in gaps
+        dilation = cv.dilate(edge,kernel,iterations = 1)
+
+        # Find contours in the board space
+        im2, contours, hierarchy = cv.findContours(dilation, cv.RETR_EXTERNAL,cv.CHAIN_APPROX_NONE)
+
+        # Find largest contour (the X or O)
+        large_cnt_index = 0
+        largest_peri = 0
+        for i in range(len(contours)):
+            perimeter = cv.arcLength(contours[i],True)
+            if perimeter > largest_peri:
+                largest_peri = perimeter
+                large_cnt_index = i
+
+        cv.drawContours(space, contours, large_cnt_index, (255,0,0), 3)
+        largest_ct = contours[large_cnt_index]
+
+        # Determine if the space is filled by an X or O
+        if cv.contourArea(largest_ct) > 3500:
+            # Calculate the solitity
+            area = cv.contourArea(largest_ct)
+            hull = cv.convexHull(largest_ct)
+            hull_area = cv.contourArea(hull)
+            try:
+                solidity = float(area)/hull_area
+            except ZeroDivisionError:
+                solidity = -100
+
+            # fill the gamestate with the right sign
+            if(solidity > 0.5):
+                    gamestate[board_index] = 2
+            else:
+                    gamestate[board_index] = 1
 
     #print the gamestate
-    for line in gamestate:
-        linetxt = ""
-        for cel in line:
-                linetxt = linetxt + "|" + cel
-        print(linetxt)
+    gamestate = np.reshape(gamestate, (3,3))
+    print gamestate
 
     # resize final image
-    res = cv.resize(img,None,fx=0.2, fy=0.2, interpolation = cv.INTER_CUBIC)
+    res = cv.resize(top_left, None,fx=0.25, fy=0.25, interpolation = cv.INTER_CUBIC)
 
     # display image
-    cv.imshow(window_name,res)
+    cv.imshow('image1', top_left)
     cv.waitKey(0)
     cv.destroyAllWindows()
 
@@ -140,13 +182,13 @@ def main():
     rospy.init_node('camera_display', anonymous=True)
     cameras = intera_interface.Cameras()
     if not cameras.verify_camera_exists(args.camera):
-        rospy.logerr("Could not detect the specified camera, exiting the example.")
+        rospy.logerr("Could not detect the specified camera, exiting.")
         return
     rospy.loginfo("Opening camera '{0}'...".format(args.camera))
     cameras.start_streaming(args.camera)
     rectify_image = not args.raw
     use_canny_edge = args.edge
-    cameras.set_callback(args.camera, show_image_callback,
+    cameras.set_callback(args.camera, get_game_state,
           rectify_image=rectify_image, callback_args=(use_canny_edge, args.camera))
 
     # optionally set gain and exposure parameters
