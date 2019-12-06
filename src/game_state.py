@@ -23,14 +23,16 @@ def get_game_state(img_data, (edge_detection, window_name)):
     """The callback function to show image by using CvBridge and cv
        and converts image to the gamestate
     """
-    #cap = cv.VideoCapture(2)
+    bridge = CvBridge()
+    try:
+        img = bridge.imgmsg_to_cv2(img_data, "bgr8")
+    except CvBridgeError, err:
+        rospy.logerr(err)
+        return
 
     #create a 2d array to hold the gamestate
     gamestate = [0,0,0,0,0,0,0,0,0]
 
-
-    # Load a grayscale image
-    img = cv.imread('x5_g15.png', cv.IMREAD_GRAYSCALE)
     # Crop top of image
     img_crop = img[0:150, 0:900]
 

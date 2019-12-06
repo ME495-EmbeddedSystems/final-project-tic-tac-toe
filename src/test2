@@ -52,15 +52,15 @@ buffer = cm/2
 tape_crop = img[y:y+h, x:x+w]
 
 # Crop frame for each board space
-top_left = img[y + 2*cm + buffer: y + 9*cm - buffer,  x + 2*cm + buffer: x + 9*cm - buffer]
-top_mid = img[y+2*cm + buffer: y + 9*cm,  x + 11*cm + buffer: x + 18*cm - buffer]
-top_right = img[y+2*cm + buffer: y + 10*cm - buffer,  x + 19*cm + buffer: x + 28*cm - buffer]
-mid_left = img[y + 11*cm + buffer: y + 18*cm - buffer,  x + 2*cm: x + 9*cm - buffer]
-mid_mid = img[y+11*cm + buffer: y + 18*cm - buffer,  x + 11*cm + buffer: x + 18*cm - buffer]
-mid_right = img[y+11*cm + 2*buffer: y + 18*cm,  x + 20*cm: x + 28*cm - buffer]
-bot_left = img[y + 20*cm + buffer: y + 29*cm - buffer,  x + 2*cm: x + 9*cm - buffer]
-bot_mid = img[y+20*cm + buffer: y + 29*cm - buffer,  x + 11*cm + buffer: x + 18*cm - buffer]
-bot_right = img[y+20*cm + 2*buffer: y + 29*cm - buffer,  x + 20*cm + buffer: x + 29*cm - buffer]
+top_left = img[y + 2*cm: y + 10*cm - buffer,  x + 2*cm: x + 10*cm - buffer]
+top_mid = img[y+2*cm: y + 9*cm,  x + 12*cm + buffer: x + 20*cm - buffer]
+top_right = img[y+2*cm: y + 10*cm - 2*buffer,  x + 22*cm + buffer: x + 30*cm ]
+mid_left = img[y + 11*cm + 2*buffer: y + 20*cm - buffer,  x + 2*cm: x + 10*cm - buffer]
+mid_mid = img[y+11*cm + buffer: y + 19*cm - buffer,  x + 12*cm + buffer: x + 20*cm - buffer]
+mid_right = img[y+11*cm + 2*buffer: y + 19*cm - buffer,  x + 23*cm: x + 31*cm]
+bot_left = img[y + 21*cm + buffer: y + 31*cm - buffer,  x + 2*cm: x + 9*cm]
+bot_mid = img[y+21*cm + buffer: y + 31*cm - buffer,  x + 12*cm + buffer: x + 20*cm - buffer]
+bot_right = img[y+21*cm + 2*buffer: y + 30*cm - buffer,  x + 23*cm + buffer: x + 32*cm]
 
 board = [top_left, top_mid, top_right, mid_left, mid_mid, mid_right, bot_left, bot_mid, bot_right]
 kernel = np.ones((4,4),np.uint8)
@@ -90,7 +90,17 @@ for space in board:
             large_cnt_index = i
 
     cv.drawContours(space, contours, large_cnt_index, (255,0,0), 3)
-    largest_ct = contours[large_cnt_index]
+    print len(contours), large_cnt_index
+    try:
+        largest_ct = contours[large_cnt_index]
+    except IndexError:
+        continue
+
+
+    # display image
+    cv.imshow('image1', space)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
 
     # Determine if the space is filled by an X or O
     if cv.contourArea(largest_ct) > 3500:
@@ -117,6 +127,6 @@ print gamestate
 res = cv.resize(top_left, None,fx=0.25, fy=0.25, interpolation = cv.INTER_CUBIC)
 
 # display image
-cv.imshow('image1', top_left)
-cv.waitKey(0)
-cv.destroyAllWindows()
+#cv.imshow('image1', top_left)
+#cv.waitKey(0)
+#cv.destroyAllWindows()
