@@ -8,30 +8,22 @@ import cv2 as cv
 gamestate = [["-","-","-"],["-","-","-"],["-","-","-"]]
 
 
-# Load a color image
-img = cv.imread("marked4.jpg")
+# Load a grayscale image
+img = cv.imread('x5_g15.png', cv.IMREAD_GRAYSCALE)
+# Crop top of image
+img_crop = img[0:150, 0:900]
 
-img_width = img.shape[0]
-img_height = img.shape[1]
 
-# turn to HSV
-hsv =  cv.cvtColor(img, cv.COLOR_BGR2HSV)
+# Define range of green color in grayscale
+lower_green = 40
+upper_green = 55
 
-# Define range of green color in HSV
-lower_green = np.array([36,0,0])
-upper_green = np.array([86,255,255])
-
-# Threshold HSV image to get only green colors
-mask = cv.inRange(hsv, lower_green, upper_green)
-
-# Blur mask
-mask = cv.medianBlur(mask, 5)
-
-#Bitwise-AND mask and original frame
-res = cv.bitwise_and(img,img, mask= mask)
+# Threshold image to get only green colors
+mask = cv.inRange(img_crop, lower_green, upper_green)
 
 # Find contours of edges
 edged = cv.Canny(mask, 30, 200)
+
 im, contours, hierarchy = cv.findContours(edged, cv.RETR_EXTERNAL,cv.CHAIN_APPROX_NONE)
 
 # Find largest contour (the green tape)
@@ -46,10 +38,13 @@ for i in range(len(contours)):
 # get coordinates of tile
 x,y,w,h = cv.boundingRect(contours[large_cnt_index])
 
-x += 4
-y += 4
-w -= 8
-h -= 8
+#cv.drawContours(img, contours, large_cnt_index, (255,0,0), 2)
+
+# Origin adjustments
+#x -= 2
+#y -= 2
+#w += 4
+#h += 4
 
 # measure 1 cm in pixels
 cm = (w+h)/4
@@ -61,11 +56,26 @@ buffer = cm/2
 
 tape_crop = img[y:y+h, x:x+w]
 
-top_left_crop = img[y + 2*cm + buffer: y + 2*cm + 7*cm - 2*buffer,  x + 2*cm + buffer: x + 2*cm + 7*cm - buffer]
+# Crop frame for each board space
+top_left = img[y + 2*cm + buffer: y + 9*cm - buffer,  x + 2*cm + buffer: x + 9*cm - buffer]
+top_mid = img[y+2*cm + buffer: y + 9*cm - buffer,  x + 11*cm + buffer: x + 18*cm - buffer]
+top_right = img[y+2*cm + buffer: y + 9*cm - buffer,  x + 20*cm + buffer: x + 29*cm - buffer]
+mid_left = img[y + 11*cm + buffer: y + 18*cm - buffer,  x + 2*cm: x + 9*cm - buffer]
+mid_mid = img[y+11*cm + buffer: y + 18*cm - buffer,  x + 11*cm + buffer: x + 18*cm - buffer]
+mid_right = img[y+11*cm + buffer: y + 18*cm - buffer,  x + 20*cm + buffer: x + 29*cm - buffer]
+bot_left = img[y + 20*cm + buffer: y + 29*cm - buffer,  x + 2*cm: x + 9*cm - buffer]
+bot_mid = img[y+20*cm + buffer: y + 29*cm - buffer,  x + 11*cm + buffer: x + 18*cm - buffer]
+bot_right = img[y+20*cm + 2*buffer: y + 29*cm - buffer,  x + 20*cm + 2*buffer: x + 29*cm - buffer]
+
+board = [top_left, top_mid, top_right, mid_left, mid_mid, mid_right, bot_left, bot_mid, bot_right]
+
 
 # Find contours of edges
-edge = cv.Canny(top_left_crop, 30, 200)
-im2, contours, hierarchy = cv.findContours(edge, cv.RETR_EXTERNAL,cv.CHAIN_APPROX_NONE)
+edge = cv.Canny(top_left, 30, 100)
+kernel = np.ones((4,4),np.uint8)
+dilation = cv.dilate(edge,kernel,iterations = 1)
+im2, contours, hierarchy = cv.findContours(dilation, cv.RETR_EXTERNAL,cv.CHAIN_APPROX_NONE)
+
 
 # Find largest contour (the X or O)
 large_cnt_index = 0
@@ -76,7 +86,8 @@ for i in range(len(contours)):
         largest_peri = perimeter
         large_cnt_index = i
 
-cv.drawContours(top_left_crop, contours, large_cnt_index, (255,0,0), 5)
+cv.drawContours(top_left, contours, large_cnt_index, (255,0,0), 3)
+
 # Draw perimeter of the tape
 #cv.drawContours(img, contours, large_cnt_index, (255,0,0), 5)
 
@@ -129,9 +140,9 @@ for line in gamestate:
         #print(linetxt)
 """
 # resize final image
-res = cv.resize(top_left_crop, None,fx=0.25, fy=0.25, interpolation = cv.INTER_CUBIC)
+res = cv.resize(top_left, None,fx=0.25, fy=0.25, interpolation = cv.INTER_CUBIC)
 
 # display image
-cv.imshow('image1', top_left_crop)
+cv.imshow('image1', top_left)
 cv.waitKey(0)
 cv.destroyAllWindows()
