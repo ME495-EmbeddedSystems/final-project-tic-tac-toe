@@ -52,10 +52,10 @@ buffer = cm/2
 tape_crop = img[y:y+h, x:x+w]
 
 # Crop frame for each board space
-top_left = img[y + 2*cm: y + 10*cm - buffer,  x + 2*cm: x + 10*cm - buffer]
+top_left = img[y + 2*cm: y + 10*cm - 2*buffer,  x + 2*cm: x + 10*cm - buffer]
 top_mid = img[y+2*cm: y + 9*cm,  x + 12*cm + buffer: x + 20*cm - buffer]
 top_right = img[y+2*cm: y + 10*cm - 2*buffer,  x + 22*cm + buffer: x + 30*cm ]
-mid_left = img[y + 11*cm + 2*buffer: y + 20*cm - buffer,  x + 2*cm: x + 10*cm - buffer]
+mid_left = img[y + 11*cm + 2*buffer: y + 20*cm - 2*buffer,  x + 2*cm: x + 10*cm - buffer]
 mid_mid = img[y+11*cm + buffer: y + 19*cm - buffer,  x + 12*cm + buffer: x + 20*cm - buffer]
 mid_right = img[y+11*cm + 2*buffer: y + 19*cm - buffer,  x + 23*cm: x + 31*cm]
 bot_left = img[y + 21*cm + buffer: y + 31*cm - buffer,  x + 2*cm: x + 9*cm]
