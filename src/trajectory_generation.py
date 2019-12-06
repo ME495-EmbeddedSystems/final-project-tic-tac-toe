@@ -13,9 +13,9 @@ def InsideDistThresh(pos_start, pos_end, DIST_THRE):
 
 
 TF = 3
-DIST_THRE = 0.005
-LINE_LENGTH = 0.08
-HOLD_TIME = 2.0
+DIST_THRE = 0.003
+LINE_LENGTH = 0.06
+HOLD_TIME = 2.5
 
 class TrajGen(object):
     def __init__(self):
@@ -40,6 +40,8 @@ class TrajGen(object):
         self.center = np.array([current_pose[0]+0.0, current_pose[1]+0.0])
         self.object_2_draw = "cross"
         self.setup_cross_params()
+
+        self.s = 0
                 
     def update_trajectory_status(self):
         '''
@@ -52,8 +54,9 @@ class TrajGen(object):
             if self.object_2_draw == "cross":
                 
                 current_pose = self.update_current_pose()
-                if InsideDistThresh( current_pose, self.current_target, DIST_THRE ):
-
+                # if InsideDistThresh( current_pose, self.current_target, DIST_THRE ):
+                if(self.s == 1):
+                    self.s = 0
                     #Last point of action has not been reached yet
                     if len( self.target_list )!=0:
 
@@ -204,11 +207,11 @@ class TrajGen(object):
             pass
         elif self.object_2_draw == "cross":
             t = rospy.Time.now().to_sec() - self.line_init_time
-            s = 10 * (1.0 * t / TF) ** 3 - 15 * (1.0 * t / TF) ** 4 + 6 * (1.0 * t / TF) ** 5
-            # s = 3.0*(t/TF)**2 - 2.0*(t/TF)**3
+            self.s = 10 * (1.0 * t / TF) ** 3 - 15 * (1.0 * t / TF) ** 4 + 6 * (1.0 * t / TF) ** 5
+            # self.s = 3.0*(t/TF)**2 - 2.0*(t/TF)**3
             if t>TF:
-                s = 1
-            coord = s * np.array( self.current_target ) + (1 - s) * np.array(self.line_init_pose)
+                self.s = 1
+            coord = self.s * np.array( self.current_target ) + (1 - self.s) * np.array(self.line_init_pose)
 
         elif self.object_2_draw == "idle":
             coord = self.current_target
