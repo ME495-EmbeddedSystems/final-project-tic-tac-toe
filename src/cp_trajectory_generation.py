@@ -3,22 +3,6 @@
 import intera_interface
 import rospy
 import numpy as np
-import os
-
-# green_point: x, y, z =  0.583772903694    -0.0935753264747    -0.114156335215
-#Test
-TF = 2.0 #3.0
-LINE_LENGTH = 0.06 #0.005
-DIST_THRE = 0.005   #0.08
-HOLD_TIME = 0.2     #2.0
-#This is the desired elbow camera pose. Modify for your application
-#TODO
-CAMERA_POSE = 
-#Coordinate of the marking. Modify for your application
-GREEN_POINT_COORD = 
-GREEN_POINT_Z = -0.114156335215
-CHECKER_CENTER_COORD = GREEN_POINT_COORD + 0.01*np.sqrt(2.0)*np.array([1.0+7.0+1.8+3.5, 1.0+7.0+1.8+3.5])
-
 
 def InsideDistThresh(pos_start, pos_end, DIST_THRE):
     #Checks if two points' x,y position difference is larger than DIST_THRE
@@ -27,6 +11,16 @@ def InsideDistThresh(pos_start, pos_end, DIST_THRE):
     else:
         return True
 
+# green_point: x, y, z =  0.583772903694    -0.0935753264747    -0.114156335215
+TF = 3
+DIST_THRE = 0.005
+LINE_LENGTH = 0.08
+HOLD_TIME = 2.0
+
+#Test
+TF = 2.0
+LINE_LENGTH = 0.06
+HOLD_TIME = 0.2
 
 class TrajGen(object):
     def __init__(self):
@@ -87,35 +81,34 @@ class TrajGen(object):
                         self.draw_status_list.pop(0)
                         self.line_init_pose = current_pose
                         
-                    #Whole Cross is done
+                    #last point of action has been reached
                     else:
-                        #go to camera position
-                        self.go_to_camera_pose()
+
                         #generate object_2_draw and ceter
                         self.get_next_object_center()
-                        #checker center is the stand off position
-                        self.go_to_checker_center()
                         
-                        #next action is idle
-                        self.object_2_draw == "idle": 
-                        self.setup_idle_params()
+                        #if the next action is cross
+                        if self.object_2_draw == "cross":
+                            self.setup_cross_params()                       
 
+                        #if the next action is idle
+                        elif self.object_2_draw == "idle": 
+                            self.setup_idle_params()
+
+                        #if the next action is circle
+                        elif self.object_2_draw == "circle":
+                            #TODO
+                            pass
 
             # if the current object to draw is idling
             elif self.object_2_draw == "idle":
-
-                #go to camera position
-                self.go_to_camera_pose()
-
-                # Wait for AI to give object_2_draw and ceter
+                #generate object_2_draw and ceter
                 self.get_next_object_center()
-               
+                
                 #if the next action is cross
                 if self.object_2_draw == "cross":
                     self.setup_cross_params()                       
-                    #checker center is the stand off position
-                    self.go_to_checker_center()
- 
+
                 #if the next action is idle
                 elif self.object_2_draw == "idle": 
                     self.setup_idle_params()
@@ -150,15 +143,6 @@ class TrajGen(object):
             self.object_2_draw = "idle"
 
 
-
-    def go_to_checker_center(self):
-
-
-
-    def go_to_camera_pose(self):
-
-
-
     def setup_cross_params(self):
         '''
         Set up params for generating a cross, after updating the center and object_to_draw
@@ -175,15 +159,13 @@ class TrajGen(object):
         
         self.if_hold = False
     
-
     def setup_idle_params(self):
         '''
         Set up params for idling, after updating the center and object_to_draw
         '''
         self.current_target = self.update_current_pose()
         self.current_draw_status = False
-    
-
+        
     def generate_cross_targets_draws(self):
         '''
         Update target_list and draw status list for drawing a cross
@@ -209,14 +191,12 @@ class TrajGen(object):
         self.draw_status_list = [0, 1, 1, -1, 0, 1, 1, -1]
 
 
-
     def update_current_pose(self):
         #Returns the current pose in an array
         current_pose = self._limb.endpoint_pose()
         full_return_pose = [current_pose['position'].x , current_pose['position'].y,current_pose['position'].z,current_pose['orientation'].x, current_pose['orientation'].y, current_pose['orientation'].z, current_pose['orientation'].w ]
         partial_return_pose = full_return_pose[:2]
         return partial_return_pose 
-
 
 
     def get_xy(self):
@@ -245,7 +225,6 @@ class TrajGen(object):
 
     def get_draw_status(self):
         return self.current_draw_status
-
 
 
 def main():
