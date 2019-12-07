@@ -143,7 +143,7 @@ class TrajGen(object):
         '''
         Destination: 'camera' - camera pose; 'standoff' - stand off pose
         '''
-        0.176208007813 -0.1716953125 -0.287819335937 0.616485351562 -2.85697167969 -2.81928320312 -4.11785449219
+        #0.176208007813 -0.1716953125 -0.287819335937 0.616485351562 -2.85697167969 -2.81928320312 -4.11785449219
         joint_angles = None
         if destination == 'camera':
             joint_angles = { 'right_j0':  0.176208007813,
