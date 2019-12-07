@@ -34,7 +34,7 @@ def get_game_state(img_data, (edge_detection, window_name)):
     gamestate = [0,0,0,0,0,0,0,0,0]
 
     # Crop top of image
-    img_crop = img[0:80, 0:180]
+    img_crop = img[0:70, 0:275]
 
     # Define range of green color in grayscale
     lower_green = 0
@@ -45,11 +45,6 @@ def get_game_state(img_data, (edge_detection, window_name)):
 
     # Find contours of edges
     edged = cv.Canny(img_crop, 30, 200)
-
-    # display image
-    cv.imshow('image1', img_crop)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
 
     im, contours, hierarchy = cv.findContours(edged, cv.RETR_EXTERNAL,cv.CHAIN_APPROX_NONE)
 
@@ -65,8 +60,6 @@ def get_game_state(img_data, (edge_detection, window_name)):
     # get coordinates of tile
     x,y,w,h = cv.boundingRect(contours[large_cnt_index])
 
-
-
     # Origin adjustments
     x += 1
     y -= 0
@@ -78,20 +71,20 @@ def get_game_state(img_data, (edge_detection, window_name)):
     # measure 1 cm in pixels
     cm = (w+h)/4
 
-    buffer = cm/2
+    buffer = cm/4
 
     tape_crop = img[y:y+h, x:x+w]
 
     # Crop frame for each board space
-    top_left = img[y + 2*cm: y + 9*cm - 2*buffer,  x + 2*cm: x + 10*cm - 2*buffer]
-    top_mid = img[y+1*cm: y + 8*cm,  x + 11*cm + buffer: x + 18*cm - buffer]
-    top_right = img[y+2*cm: y + 9*cm - 2*buffer,  x + 20*cm + buffer: x + 28*cm ]
+    top_left = img[y + 2*cm: y + 9*cm - 4*buffer,  x + 2*cm: x + 9*cm - 2*buffer]
+    top_mid = img[y+1*cm : y + 8*cm - 2*buffer,  x + 11*cm + 2*buffer: x + 17*cm - 2*buffer]
+    top_right = img[y+1*cm: y + 8*cm - 2*buffer,  x + 20*cm: x + 28*cm ]
     mid_left = img[y + 10*cm + 2*buffer: y + 17*cm - buffer,  x + 2*cm: x + 9*cm - buffer]
-    mid_mid = img[y+10*cm + buffer: y + 17*cm - buffer,  x + 11*cm + buffer: x + 18*cm]
-    mid_right = img[y+10*cm + buffer: y + 17*cm - buffer,  x + 21*cm: x + 29*cm]
-    bot_left = img[y + 20*cm + buffer: y + 29*cm - buffer,  x + 2*cm: x + 9*cm]
-    bot_mid = img[y+20*cm + buffer: y + 29*cm - buffer,  x + 11*cm + buffer: x + 19*cm - buffer]
-    bot_right = img[y+19*cm + buffer: y + 29*cm - buffer,  x + 21*cm + buffer: x + 29*cm]
+    mid_mid = img[y+10*cm + buffer: y + 17*cm - 2*buffer,  x + 11*cm + buffer: x + 18*cm - buffer]
+    mid_right = img[y+10*cm + buffer: y + 17*cm - 3*buffer,  x + 21*cm: x + 29*cm]
+    bot_left = img[y + 19*cm + 2*buffer: y + 29*cm - buffer,  x + 2*cm: x + 9*cm]
+    bot_mid = img[y+19*cm + buffer: y + 29*cm - buffer,  x + 11*cm + 2*buffer: x + 19*cm - 3*buffer]
+    bot_right = img[y+19*cm: y + 28*cm - buffer,  x + 20*cm + 2*buffer: x + 29*cm]
 
     board = [top_left, top_mid, top_right, mid_left, mid_mid, mid_right, bot_left, bot_mid, bot_right]
     kernel = np.ones((4,4),np.uint8)
@@ -122,17 +115,16 @@ def get_game_state(img_data, (edge_detection, window_name)):
 
         cv.drawContours(space, contours, large_cnt_index, (255,0,0), 2)
 
+
         # display image
-        cv.imshow('image1', space)
-        cv.waitKey(0)
-        cv.destroyAllWindows()
+        #cv.imshow('image1', space)
+        #cv.waitKey(0)
+        #cv.destroyAllWindows()
 
         try:
             largest_ct = contours[large_cnt_index]
         except IndexError:
             continue
-
-        print cv.contourArea(largest_ct)
 
         # Determine if the space is filled by an X or O
         if cv.contourArea(largest_ct) > 1000:
@@ -188,10 +180,10 @@ def main():
         '-e', '--edge', action='store_true',
         help='Streaming the Canny edge detection image')
     parser.add_argument(
-        '-g', '--gain', type=int,
+        '-g', '--gain', type=int, default=15,
         help='Set gain for camera (-1 = auto)')
     parser.add_argument(
-        '-x', '--exposure', type=float,
+        '-x', '--exposure', type=float, default=5,
         help='Set exposure for camera (-1 = auto)')
     args = parser.parse_args(rospy.myargv()[1:])
 
