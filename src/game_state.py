@@ -46,6 +46,11 @@ def get_game_state(img_data, (edge_detection, window_name)):
     # Find contours of edges
     edged = cv.Canny(img_crop, 30, 200)
 
+    # display image
+    cv.imshow('image1', img_crop)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
     im, contours, hierarchy = cv.findContours(edged, cv.RETR_EXTERNAL,cv.CHAIN_APPROX_NONE)
 
     # Find largest contour (the green tape)
@@ -152,6 +157,7 @@ def get_game_state(img_data, (edge_detection, window_name)):
     #print the gamestate
     gamestate = np.reshape(gamestate, (3,3))
     print gamestate
+    return gamestate
 
 def main():
     """Camera Display
