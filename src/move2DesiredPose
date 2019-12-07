@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 """  A test node to move the end effector to the desired pose
-
  SUBSCRIBERS:
   +
   +
-
 PUBLISHERS:
   + /ee_wrench(geometry_msgs/WrenchStamped)
   +
-
 """
 
 import rospy
@@ -58,6 +55,8 @@ class Move2DesiredPose(object):
         self.previousMode = 99
         self.modeChanged = False
 
+        self.gripper_close()
+        #self.gripper_open()
 
     def advance(self):
         # joint commands are sent in this function
