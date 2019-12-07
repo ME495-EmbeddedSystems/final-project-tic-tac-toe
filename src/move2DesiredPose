@@ -55,6 +55,8 @@ class Move2DesiredPose(object):
         self.previousMode = 99
         self.modeChanged = False
 
+        self.gripper_close()
+        #self.gripper_open()
 
     def advance(self):
         # joint commands are sent in this function
