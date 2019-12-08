@@ -16,7 +16,8 @@ FROM_CENTER_D = 0.01*(7.0+1.8)
 #Coordinate of the marking. Modify for your application
 GREEN_POINT_COORD = np.array([0.6263453770987546, -0.12562004467910037])
 #TESTING
-CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.01, 0.01])
+#CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.01, 0.01])
+CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.010, 0.020])
 
 def InsideDistThresh(pos_start, pos_end, DIST_THRE):
     #Checks if two points' x,y position difference is larger than DIST_THRE
@@ -72,9 +73,9 @@ class TrajGen(object):
         if self.if_hold != 1:
 
             if self.object_2_draw == "cross":
-                print("entering")
-                print "draw_status", self.current_draw_status
-                print "s: ", self.s
+                #print("entering")
+                #print "draw_status", self.current_draw_status
+                #print "s: ", self.s
                 current_pose = self.update_current_pose()
                 # if InsideDistThresh( current_pose, self.current_target, DIST_THRE ):
                 #print"this is cross"
@@ -109,21 +110,28 @@ class TrajGen(object):
 
                         #go to camera position
                         self.go_to_camera_or_standoff('camera')
+                        #sleep till arm stablizes
+                        rospy.sleep(0.5)
+                        self.go_to_camera_or_standoff('camera')
                        # #checker center is the stand off position
                        # self.go_to_checker_center()
 
                         #next action is idle
                         self.object_2_draw = "idle"
-                        # while self.object_2_draw == "idle":
-                        #     self.get_next_object_center()
+                        while self.object_2_draw == "idle":
+                            self.get_next_object_center()
+
+
+                        self.go_to_camera_or_standoff('standoff')
+                        self.setup_cross_params()
 
                         #TODO
                         #self.setup_cross_params()
                         #checker center is the stand off position
                         # self.go_to_camera_or_standoff('standoff')
-                print "s: ", self.s
-                print "draw_status", self.current_draw_status
-                print("exiting")
+                #print "s: ", self.s
+                #print "draw_status", self.current_draw_status
+                #print("exiting")
             # if the current object to draw is idling
 
             elif self.object_2_draw == "idle":
@@ -132,7 +140,7 @@ class TrajGen(object):
 
                 self.go_to_camera_or_standoff('standoff')
                 self.setup_cross_params()
-                 #checker center is the stand off position
+
 
 
 

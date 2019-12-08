@@ -73,12 +73,8 @@ class Camera(object):
         tape_crop = img[y:y+h, x:x+w]
 
         # Crop frame for each board space
-        top_left = img[y + 2*cm: y + 9*cm - 4*buffer,  x + 2*cm: x + 9*cm - 2*buffer]
-
-
-
-
-        top_mid = img[y+1*cm : y + 8*cm - 2*buffer,  x + 11*cm + 2*buffer: x + 17*cm - 2*buffer]
+        top_left = img[y + cm: y + 9*cm - 4*buffer,  x + 2*cm: x + 9*cm - 2*buffer]
+        top_mid = img[y+1*cm : y + 8*cm - 2*buffer,  x + 11*cm + buffer: x + 17*cm - buffer]
         top_right = img[y+1*cm: y + 8*cm - 3*buffer,  x + 20*cm: x + 28*cm ]
         mid_left = img[y + 10*cm + 2*buffer: y + 17*cm - buffer,  x + 2*cm: x + 9*cm - buffer]
         mid_mid = img[y+10*cm + buffer: y + 17*cm - 2*buffer,  x + 11*cm + buffer: x + 18*cm - buffer]
@@ -124,15 +120,15 @@ class Camera(object):
                 continue
 
             # Determine if the space is filled by an X or O
-            #print(cv.contourArea(largest_ct))
+            print(cv.contourArea(largest_ct))
 
 
 
             # display image
             #print(str(board_index))
-            #cv.imshow('image', space)
-            #cv.waitKey(0)
-            #cv.destroyAllWindows()
+            cv.imshow('image', img)
+            cv.waitKey(250)
+            cv.destroyAllWindows()
 
 
             if cv.contourArea(largest_ct) > 1000:
@@ -155,12 +151,16 @@ class Camera(object):
                         gamestate[board_index] = 1
 
         #print the gamestate
+        print(gamestate)
         self.gamestate = np.reshape(gamestate, (3,3))
+        print(self.gamestate)
+        self.once = True
         #print(self.gamestate)
         return
 
     def __init__(self):
         self.gamestate = np.zeros((3,3))
+        self.once = False
 
         """Camera Display
 
