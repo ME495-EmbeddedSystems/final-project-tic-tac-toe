@@ -37,13 +37,8 @@ class Camera(object):
 
         # Crop top of image
         img_crop = img[0:70, 0:275]
+        img_crop_tape = img[5:70, 40:275]
 
-        # Define range of green color in grayscale
-        lower_green = 0
-        upper_green = 255
-
-        # Threshold image to get only green colors
-        #mask = cv.inRange(img_crop, lower_green, upper_green)
 
         # Find contours of edges
         edged = cv.Canny(img_crop, 30, 200)
@@ -84,7 +79,7 @@ class Camera(object):
 
 
         top_mid = img[y+1*cm : y + 8*cm - 2*buffer,  x + 11*cm + 2*buffer: x + 17*cm - 2*buffer]
-        top_right = img[y+1*cm: y + 8*cm - 2*buffer,  x + 20*cm: x + 28*cm ]
+        top_right = img[y+1*cm: y + 8*cm - 3*buffer,  x + 20*cm: x + 28*cm ]
         mid_left = img[y + 10*cm + 2*buffer: y + 17*cm - buffer,  x + 2*cm: x + 9*cm - buffer]
         mid_mid = img[y+10*cm + buffer: y + 17*cm - 2*buffer,  x + 11*cm + buffer: x + 18*cm - buffer]
         mid_right = img[y+10*cm + buffer: y + 17*cm - 3*buffer,  x + 21*cm: x + 29*cm]
@@ -202,7 +197,7 @@ class Camera(object):
         args = parser.parse_args(rospy.myargv()[1:])
 
         print("Initializing node... ")
-        rospy.init_node('camera_display', anonymous=True)
+        #rospy.init_node('camera_display', anonymous=True)
         cameras = intera_interface.Cameras()
         if not cameras.verify_camera_exists(args.camera):
             rospy.logerr("Could not detect the specified camera, exiting.")
@@ -225,8 +220,6 @@ class Camera(object):
 
         cameras.set_callback(args.camera, self.get_game_state,
               rectify_image=rectify_image, callback_args=(use_canny_edge, args.camera, cameras))
+        cameras.stop_streaming(args.camera)
 
-        self.cameras.start_streaming(self.argsCamera)
-
-        rospy.sleep(0.5)
         return

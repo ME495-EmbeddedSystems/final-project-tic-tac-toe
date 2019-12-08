@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 import numpy as np
+import rospy
 
 def printe(string):
     print(string, end='')
@@ -58,7 +59,7 @@ def findNextMove(gameboard, robot_player):
 
     if(total_robot_moves > total_other_moves):
         print("Not the robots turn")
-        return
+        return (-1,-1)
     ###
 
     #hard coded first move (go for center)
@@ -91,7 +92,7 @@ def findNextMove(gameboard, robot_player):
         # save row weight
         for k in range(3):
             if gameboard[i][k] != 0:
-                weights[i][k] == -1
+                weights[i][k] = -1
             else:
                 weights[i][k] += abs(w)
 
@@ -114,7 +115,7 @@ def findNextMove(gameboard, robot_player):
         # save col weight
         for k in range(3):
             if gameboard[k][i] != 0:
-                weights[k][i] == -1
+                weights[k][i] = -1
             else:
                 weights[k][i] += abs(w)
 
@@ -137,7 +138,7 @@ def findNextMove(gameboard, robot_player):
 
     for k in range(3):
         if gameboard[k][k] != 0:
-            weights[k][k] == -1
+            weights[k][k] = -1
         else:
             weights[k][k] += abs(w)
 
@@ -158,7 +159,7 @@ def findNextMove(gameboard, robot_player):
 
     for k in range(3):
         if gameboard[k][2-k] != 0:
-            weights[k][2-k] == -1
+            weights[k][2-k] = -1
         else:
             weights[k][2-k] += abs(w)
 
@@ -167,12 +168,60 @@ def findNextMove(gameboard, robot_player):
 
     print_array(weights)
 
-    rows = np.copy(gameboard).tolist()
-    return
+    maxWeight = -1
+    coor = (-1,-1)
+    for i in range(3):
+        for k in range(3):
+            test_weight = weights[i][k]
+            if test_weight > maxWeight:
+                print(test_weight)
+                maxWeight = test_weight
+                coor = (i,k)
+
+    return coor
+
+def convertCoor(tuple):
+    return (-tuple[0]+1,-tuple[1]+1)
+
+def convertShape2String(shapeInt):
+    if shapeInt == -1:
+        return "end"
+    if shapeInt == 0:
+        return "idle"
+    if shapeInt == 1:
+        return "cross"
+    if shapeInt == 2:
+        return "circle"
+    return "error"
+
+def rotateBoard(board):
+    newBoard = np.copy(board)
+    for i in range(3):
+        for k in range(3):
+            newBoard[2-i][2-k] = board[i][k]
+    return newBoard
+
+def Update(camera):
+
+    camera.cameras.start_streaming(camera.argsCamera)
+    
+    rospy.sleep(0.5)
+    camera.cameras.stop_streaming(camera.argsCamera)
+    move = findNextMove(rotateBoard(camera.gamestate), 1)
+    print_array(rotateBoard(camera.gamestate))
+    print(move)
+    if move[0] == -1:
+        return (0,0),0
+    if move[1] == -1:
+        return (0,0),0
+    return move,1
 
 if __name__ == "__main__":
-    board = [[0,0,0],[0,0,0],[0,0,0]]
+    rospy.init_node("sawyer")
+
+    board = [[2,1,2],[2,1,1],[1,2,0]]
     bot = 1
     move = findNextMove(board,bot)
     print("Move: " + str(move))
     print(findXYOffset(move))
+    rospy.spin()
