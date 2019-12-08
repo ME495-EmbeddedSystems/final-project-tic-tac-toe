@@ -41,7 +41,8 @@ class TrajGen(object):
         self.s = 0
 
         self.object_2_draw = "idle"
-#        self.setup_idle_params()
+        #go to camera_pose
+        #self.go_to_camera_or_standoff('camera')
 
         #Test
         #print self._limb.endpoint_pose()
