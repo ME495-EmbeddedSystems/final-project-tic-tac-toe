@@ -3,17 +3,21 @@
 import intera_interface
 import rospy
 import numpy as np
+import game_state as gs
+import tttAI as ai
+
 
 TF = 3
 DIST_THRE = 0.003
 LINE_LENGTH = 0.06
 HOLD_TIME = 2.5
-
+FROM_CENTER_D = 0.01*(7.0+1.8)
 #This is the desired elbow camera pose. Modify for your application
 #Coordinate of the marking. Modify for your application
-GREEN_POINT_COORD = np.array([0.6263453770987546, -0.12562004467910037]) 
+GREEN_POINT_COORD = np.array([0.6263453770987546, -0.12562004467910037])
 #TESTING
-CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.01, 0.01])
+#CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.01, 0.01])
+CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.010, 0.020])
 
 def InsideDistThresh(pos_start, pos_end, DIST_THRE):
     #Checks if two points' x,y position difference is larger than DIST_THRE
@@ -25,7 +29,7 @@ def InsideDistThresh(pos_start, pos_end, DIST_THRE):
 
 class TrajGen(object):
     def __init__(self):
-        global TF, DIST_THRE, LINE_LENGTH, HOLD_TIME, CHECKER_CENTER_COORD
+        global TF, DIST_THRE, LINE_LENGTH, HOLD_TIME, CHECKER_CENTER_COORD, FROM_CENTER_D
 
         self._limb = intera_interface.Limb("right")
         self.center = np.array([])
@@ -42,32 +46,37 @@ class TrajGen(object):
 
         self.object_2_draw = "idle"
         #go to camera_pose
-        #self.go_to_camera_or_standoff('camera')
+        self.go_to_camera_or_standoff('camera')
+
+        # michael camera object to pass to bennett
+        self.camera = gs.Camera()
+        self.gameRunning = True
 
         #Test
         #print self._limb.endpoint_pose()
-        self.object_2_draw = "cross"
-        self.go_to_camera_or_standoff('standoff')
-        from_center_d = 0.01*(7.0+1.8)
-        self.center = [CHECKER_CENTER_COORD[0]   -1.0* from_center_d,CHECKER_CENTER_COORD[1]  + 1.0*from_center_d]
-        print "center: ", self.center
-        
-        self.setup_cross_params()
+        # self.object_2_draw = "cross"
+        # self.go_to_camera_or_standoff('standoff')
+        # self.center = [CHECKER_CENTER_COORD[0]   -1.0* FROM_CENTER_D,CHECKER_CENTER_COORD[1]  + 1.0*FROM_CENTER_D]
+        # #print "center: ", self.center
+        # self.setup_cross_params()
 
-                
+
+
     def update_trajectory_status(self):
         '''
-        Updates trajectory variable status, every time it is called in the force control loop. 
-        Key params: 
+        Updates trajectory variable status, every time it is called in the force control loop.
+        Key params:
             1. self.draw_status: -1 means moving up, 0 is moving horizontally, 1 is moving down (force control required)
         '''
         if self.if_hold != 1:
 
             if self.object_2_draw == "cross":
-            
+                #print("entering")
+                #print "draw_status", self.current_draw_status
+                #print "s: ", self.s
                 current_pose = self.update_current_pose()
                 # if InsideDistThresh( current_pose, self.current_target, DIST_THRE ):
-                print"this is cross"
+                #print"this is cross"
                 if (self.s == 1):
                     self.s = 0
                     #Last point of action has not been reached yet
@@ -75,8 +84,9 @@ class TrajGen(object):
                     if len( self.target_list )!=0:
 
                         # If we should hold (go up or down)
+                        #print self.center
                         if (self.if_hold == 0) and np.array_equal(self.target_list[0], self.current_target):
-                            print "current target: ", self.current_target, "| target_list: ", self.target_list
+                            #print "current target: ", self.current_target, "| target_list: ", self.target_list
                             self.if_hold = 1
                             self.hold_init_time = rospy.Time.now().to_sec()
                             self.line_init_time = rospy.Time.now().to_sec()
@@ -86,56 +96,88 @@ class TrajGen(object):
                         else:
                             self.if_hold = 0 #when if_hold = -1
                             self.line_init_time = rospy.Time.now().to_sec()
-                        
+
                         self.current_target = self.target_list[0]
                         self.target_list.pop(0)
                         self.current_draw_status = self.draw_status_list[0]
                         self.draw_status_list.pop(0)
                         self.line_init_pose = current_pose
-                        
+
                     #Whole Cross is done
                     else:
 
                         #go to camera position
                         self.go_to_camera_or_standoff('camera')
+                        #sleep till arm stablizes
+                        rospy.sleep(0.5)
+                        self.go_to_camera_or_standoff('camera')
                        # #checker center is the stand off position
                        # self.go_to_checker_center()
-                        
+
                         #next action is idle
-                        self.object_2_draw = "idle" 
+                        self.object_2_draw = "idle"
                         while self.object_2_draw == "idle":
                             self.get_next_object_center()
-            
-                        self.setup_cross_params()                       
-                        #checker center is the stand off position
+
+
                         self.go_to_camera_or_standoff('standoff')
-                        
+                        self.setup_cross_params()
 
-
+                        #TODO
+                        #self.setup_cross_params()
+                        #checker center is the stand off position
+                        # self.go_to_camera_or_standoff('standoff')
+                #print "s: ", self.s
+                #print "draw_status", self.current_draw_status
+                #print("exiting")
             # if the current object to draw is idling
+
             elif self.object_2_draw == "idle":
                 while self.object_2_draw == 'idle':
                     self.get_next_object_center()
- 
-                self.setup_cross_params()                       
-                 #checker center is the stand off position
+
                 self.go_to_camera_or_standoff('standoff')
+                self.setup_cross_params()
+
+
+
+
+            elif self.object_2_draw == "end":
+                #TODO
+                pass
 
         #if we are holding (move up or down)
         else:
             if rospy.Time.now().to_sec() - self.hold_init_time > HOLD_TIME:
-                print "hold time is up"
+                #print "hold time is up"
                 self.if_hold = -1,
-                print "current goal", self.current_target, " | target list: ", self.target_list
+                #print "current goal", self.current_target, " | target list: ", self.target_list
 
 
 
     def get_next_object_center(self):
         #call AI function to get center, object to draw
+        # bennett function gets called
+
+        boardCoordinate,shapeInt = ai.Update(self.camera)
+        robotCoordinate = ai.convertCoor(boardCoordinate)
+        shapeString = ai.convertShape2String(shapeInt)
+
+        print(robotCoordinate)
+        self.object_2_draw = shapeString
+        if shapeString == "idle":
+            return
+        if shapeString == "end":
+            self.gameRunning = False
+            return
+        self.center = [CHECKER_CENTER_COORD[0] + robotCoordinate[0]* FROM_CENTER_D, CHECKER_CENTER_COORD[1]  + robotCoordinate[1]* FROM_CENTER_D]
+
+        # ## TODO:
 
         #Test
-        if self.object_2_draw == "cross":
-            self.object_2_draw = "idle"
+        #print robotCoordinate
+        # if self.object_2_draw == "cross":
+        #      self.object_2_draw = "idle"
 
 
 
@@ -155,9 +197,9 @@ class TrajGen(object):
                              'right_j5': -2.81928320312,
                              'right_j6': -4.11785449219}
 
-           
+
         elif destination == 'standoff':
-       
+
             joint_angles = { 'right_j0': -0.570514648437,
                              'right_j1': -0.405889648437,
                              'right_j2': -2.72518945313,
@@ -177,15 +219,15 @@ class TrajGen(object):
         self.generate_cross_targets_draws()
         self.current_target = self.target_list[0]
         self.target_list.pop(0)
-        
+
         self.current_draw_status = self.draw_status_list[0]
         self.draw_status_list.pop(0)
 
         self.line_init_time = rospy.Time.now().to_sec()
         self.line_init_pose = self.update_current_pose()
-        
+
         self.if_hold = 0
-   
+
 
     def generate_cross_targets_draws(self):
         '''
@@ -193,19 +235,19 @@ class TrajGen(object):
         '''
         delta_y = delta_x = 1.0/(2.0*np.sqrt(2)) * LINE_LENGTH
 
-        #first segment: stand off point -> first point (z will be updated by force control) -> second point (z will be updated by force control). 
+        #first segment: stand off point -> first point (z will be updated by force control) -> second point (z will be updated by force control).
         cross_target_poses = [None]*8
         cross_target_poses[0] = self.center + np.array([ 1*delta_x,  1*delta_y])                         #a-b
         cross_target_poses[1] = self.center + np.array([ 1*delta_x,  1*delta_y])                         #b-b
         cross_target_poses[2] = self.center + np.array([ -1*delta_x,  -1*delta_y])                         #b-c
         cross_target_poses[3] = self.center + np.array([ -1*delta_x,  -1*delta_y])                         #c-c
-        #second segment: stand off point -> first point (z will be updated by force control) -> second point (z will be updated by force control). 
+        #second segment: stand off point -> first point (z will be updated by force control) -> second point (z will be updated by force control).
         cross_target_poses[4] = self.center + np.array([ 1*delta_x, -1*delta_y])        #c-d
         cross_target_poses[5] = self.center + np.array([ 1*delta_x, -1*delta_y])        #d-d
         cross_target_poses[6] = self.center + np.array([-1*delta_x,  1*delta_y])        #d-e
         #third segment: stand off point for next action
         cross_target_poses[7] = self.center + np.array([-1*delta_x,  1*delta_y])        #e-e
-        
+
         self.target_list = cross_target_poses
         #draw_status: -1 move up, 0 move horizontally, 1 move down(force control)
         self.draw_status_list = [0, 1, 1, -1, 0, 1, 1, -1]
@@ -217,15 +259,15 @@ class TrajGen(object):
         current_pose = self._limb.endpoint_pose()
         full_return_pose = [current_pose['position'].x , current_pose['position'].y,current_pose['position'].z,current_pose['orientation'].x, current_pose['orientation'].y, current_pose['orientation'].z, current_pose['orientation'].w ]
         partial_return_pose = full_return_pose[:2]
-        return partial_return_pose 
+        return partial_return_pose
 
 
 
     def get_xy(self):
         '''
-        Returns the waypoint [x,y] for the next instant. 
+        Returns the waypoint [x,y] for the next instant.
         '''
-        print self.object_2_draw
+        #print self.object_2_draw
         coord = None
         if self.object_2_draw == "circle":
             #TODO
@@ -240,14 +282,16 @@ class TrajGen(object):
 
         elif self.object_2_draw == "idle":
             #test
-            print "get_xy_idle"
+            #print "get_xy_idle"
             coord = self.current_target
-       
+
         return coord
 
 
 
     def get_draw_status(self):
+        #Test
+        #print self.current_draw_status
         return self.current_draw_status
 
 
@@ -256,7 +300,7 @@ def main():
     rospy.init_node("sawyer")
     trajgen = TrajGen()
     trajgen.generate_cross_targets_draws()
-    
+
     r = rospy.Rate(1)
     for i in range(20):
         coord = trajgen.get_xy()
