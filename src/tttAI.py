@@ -204,8 +204,8 @@ def rotateBoard(board):
 def Update(camera):
 
     camera.cameras.start_streaming(camera.argsCamera)
-    
-    rospy.sleep(0.5)
+
+    rospy.sleep(5)
     camera.cameras.stop_streaming(camera.argsCamera)
     move = findNextMove(rotateBoard(camera.gamestate), 1)
     print_array(rotateBoard(camera.gamestate))
