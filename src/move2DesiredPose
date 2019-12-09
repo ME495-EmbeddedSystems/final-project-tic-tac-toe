@@ -126,6 +126,8 @@ class Move2DesiredPose(object):
 def main():
     """ The main() function. """
     rospy.init_node('move_to_desired_pose', anonymous=True)
+
+    print("Starting program")
     eePoseController = Move2DesiredPose()
     trajectoryGenerator = TrajGen()
     # eePoseController.gripper_close()

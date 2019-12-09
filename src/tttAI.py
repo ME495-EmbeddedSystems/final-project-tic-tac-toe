@@ -293,7 +293,8 @@ def Update(camera):
     move,shape = findNextMove(rotateBoard(camera.gamestate), 1)
     #print_array(rotateBoard(camera.gamestate))
     #print(move)
-    displayFace(11)
+    if not isGameOver(camera.gamestate):
+        displayFace(11)
     print(":" + str(move))
     print(":" + str(shape))
     if move[0] == -1:
