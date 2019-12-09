@@ -127,7 +127,7 @@ def main():
     trajectoryGenerator = TrajGen()
     # eePoseController.gripper_close()
     # eePoseController.gripper_open()
-    while not rospy.is_shutdown():
+    while (not rospy.is_shutdown()) & trajectoryGenerator.gameRunning:
         trajectoryGenerator.update_trajectory_status()
         [eePoseController.desiredEePose.position.x, eePoseController.desiredEePose.position.y] = trajectoryGenerator.get_xy()
         eePoseController.desiredEePose.orientation = eePoseController.targetEePose.orientation
@@ -157,6 +157,7 @@ def main():
 
         eePoseController.publishWrench()
         # print(eePoseController.wrenchMsg.wrench.force.z)
+    print("GAME OVER")
 
 if __name__ == '__main__':
     try:
