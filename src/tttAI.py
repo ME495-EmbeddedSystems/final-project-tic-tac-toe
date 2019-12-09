@@ -6,6 +6,7 @@ import intera_interface
 from random import randrange
 #import intera_external_devices as kb
 import keyboard as kb
+import rospy
 
 def printe(string):
     print(string, end='')
@@ -31,10 +32,13 @@ def findXYOffset(tuple):
     unitScale = 1 #use this for changing units from cm
     return (xOffset*unitScale,yOffset*unitScale)
 
-def displayFace():
+def displayFace(mode):
     _head = intera_interface.Head()
     head_display = intera_interface.HeadDisplay()
-    filepath = "images/win" + str(randrange(4)) + ".jpg"
+    if mode == 0:
+        filepath = "images/tie" + str(randrange(4)) + ".jpg"
+    if mode == 1:
+        filepath = "images/win" + str(randrange(4)) + ".jpg"
     head_display.display_image(filepath)
 
 def isGameOver(b):
@@ -47,8 +51,6 @@ def isGameOver(b):
                 board[i][k] = -1
             if board[i][k] != 0:
                 moves += 1
-    if moves == 9:
-        return True
     rows = np.copy(board)
     cols = np.copy(board).T
     diags = np.array([[0,0,0],[0,0,0]])
@@ -65,8 +67,12 @@ def isGameOver(b):
 
     for i in range(8):
         if testWin[i] == 3:
-            displayFace()
+            displayFace(1)
             return True
+
+    if moves == 9:
+        displayFace(0)
+        return True
     return False
 
 
@@ -281,6 +287,7 @@ def Update(camera):
     return move,1
 
 if __name__ == "__main__":
+    rospy.init_node('saw')
     board = [[1,0,2],[0,1,0],[2,0,1]]
     print_array(board)
     print()
