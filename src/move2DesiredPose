@@ -11,10 +11,9 @@ PUBLISHERS:
 import rospy
 
 from geometry_msgs.msg import Pose, WrenchStamped
-
 from trajectory_generation import TrajGen
-
 import intera_interface
+from random import randrange
 
 class Move2DesiredPose(object):
 
@@ -24,6 +23,11 @@ class Move2DesiredPose(object):
         self.wrenchMsg = WrenchStamped()
 
         self._limb = intera_interface.Limb("right")
+        self._head = intera_interface.Head()
+        self._head.set_pan(-0.25)
+        # self.head_display = intera_interface.HeadDisplay()
+        # filepath = "images/win" + str(randrange(4)) + ".jpg"
+        # self.head_display.display_image(filepath)
         self._gripper = intera_interface.Gripper()
 
         self.initial_t = rospy.Time.now().to_sec()
@@ -75,8 +79,8 @@ class Move2DesiredPose(object):
         # print(self.desiredEePose.position)
 
 
-        joint_angles = self._limb.ik_request(self.desiredEePose)
-        self._limb.set_joint_positions(joint_angles)
+        # joint_angles = self._limb.ik_request(self.desiredEePose)
+        # self._limb.set_joint_positions(joint_angles)
 
     def forceControl(self):
         # desired z position relative to the end effector is calculated with a simple P controller.
