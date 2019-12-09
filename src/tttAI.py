@@ -7,6 +7,7 @@ from random import randrange
 #import intera_external_devices as kb
 import keyboard as kb
 import rospy
+import rospkg
 
 def printe(string):
     print(string, end='')
@@ -35,10 +36,22 @@ def findXYOffset(tuple):
 def displayFace(mode):
     _head = intera_interface.Head()
     head_display = intera_interface.HeadDisplay()
+
+    rospack = rospkg.RosPack()
+    pkgpath = rospack.get_path('final-project-tic-tac-toe')
+
     if mode == 0:
-        filepath = "images/tie" + str(randrange(4)) + ".jpg"
+        filepath = pkgpath + "/images/tie" + str(randrange(4)) + ".jpg"
     if mode == 1:
-        filepath = "images/win" + str(randrange(4)) + ".jpg"
+        filepath = pkgpath + "/images/win" + str(randrange(4)) + ".jpg"
+    if mode == 2:
+        filepath = pkgpath + "/images/lose" + str(randrange(4)) + ".jpg"
+    if mode == 11:
+        filepath = pkgpath + "/images/board.jpg"
+    if mode == 22:
+        filepath = pkgpath + "/images/turn" + str(randrange(4)) + ".jpg"
+
+
     head_display.display_image(filepath)
 
 def isGameOver(b):
@@ -98,9 +111,10 @@ def findNextMove(gameboard, robot_player):
             raise TypeError("Tic Tac Toe Board expected " + str(colSize) + " columns, got " + str(len(gameboard[i])))
     ###
 
+    print_array(gameboard)
     #test for gameover
     if isGameOver(gameboard):
-        print("GO")
+        #print("GO")
         return (0,0),-1
 
     #test to see if it is the robots turn
@@ -268,6 +282,7 @@ def waitKey():
 
 def Update(camera):
     rospy.sleep(1)
+    print("Press Enter to continue...")
     waitKey()
     camera.cameras.start_streaming(camera.argsCamera)
     camera.once = False
@@ -278,6 +293,9 @@ def Update(camera):
     move,shape = findNextMove(rotateBoard(camera.gamestate), 1)
     #print_array(rotateBoard(camera.gamestate))
     #print(move)
+    displayFace(11)
+    print(":" + str(move))
+    print(":" + str(shape))
     if move[0] == -1:
         return (0,0),0
     if move[1] == -1:
@@ -288,7 +306,7 @@ def Update(camera):
 
 if __name__ == "__main__":
     rospy.init_node('saw')
-    board = [[1,0,2],[0,1,0],[2,0,1]]
+    board = [[1,1,2],[2,2,1],[1,1,1]]
     print_array(board)
     print()
     waitKey()

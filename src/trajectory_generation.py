@@ -117,9 +117,10 @@ class TrajGen(object):
 
                         #next action is idle
                         self.object_2_draw = "idle"
-                        while self.object_2_draw == "idle":
+                        while (self.object_2_draw == "idle") & (self.object_2_draw != "end"):
                             self.get_next_object_center()
-
+                        if self.object_2_draw == "end":
+                            return
 
                         self.go_to_camera_or_standoff('standoff')
                         self.setup_cross_params()
@@ -134,8 +135,11 @@ class TrajGen(object):
             # if the current object to draw is idling
 
             elif self.object_2_draw == "idle":
-                while self.object_2_draw == 'idle':
+                while (self.object_2_draw == 'idle') & (self.object_2_draw != "end"):
                     self.get_next_object_center()
+
+                if(self.object_2_draw == "end"):
+                    return
 
                 self.go_to_camera_or_standoff('standoff')
                 self.setup_cross_params()
@@ -161,11 +165,15 @@ class TrajGen(object):
         #call AI function to get center, object to draw
         # bennett function gets called
 
+        if self.object_2_draw == "end":
+            self.gameRunning = False
+            return
         boardCoordinate,shapeInt = ai.Update(self.camera)
         robotCoordinate = ai.convertCoor(boardCoordinate)
         shapeString = ai.convertShape2String(shapeInt)
 
         print(robotCoordinate)
+        print(shapeString)
         self.object_2_draw = shapeString
         if shapeString == "idle":
             return
@@ -288,6 +296,9 @@ class TrajGen(object):
             #test
             #print "get_xy_idle"
             coord = self.current_target
+
+        elif self.object_2_draw == "end":
+            return [0,0]
 
         return coord
 

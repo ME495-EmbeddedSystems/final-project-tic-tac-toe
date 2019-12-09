@@ -133,6 +133,8 @@ def main():
     while (not rospy.is_shutdown()) & trajectoryGenerator.gameRunning:
         trajectoryGenerator.update_trajectory_status()
         [eePoseController.desiredEePose.position.x, eePoseController.desiredEePose.position.y] = trajectoryGenerator.get_xy()
+        if trajectoryGenerator.object_2_draw == "end":
+            break
         eePoseController.desiredEePose.orientation = eePoseController.targetEePose.orientation
 
         if(eePoseController.previousMode is not trajectoryGenerator.get_draw_status()):
@@ -159,15 +161,12 @@ def main():
         eePoseController._limb.set_joint_positions(joint_angles)
 
         eePoseController.publishWrench()
-<<<<<<< HEAD
         # print(eePoseController.wrenchMsg.wrench.force.z)
-    print("GAME OVER")
-=======
         eePoseController._head.set_pan(-joint_angles["right_j0"])
->>>>>>> 7d56ec75cdb73eda985036371b09484c698a9d90
 
 if __name__ == '__main__':
     try:
         main()
+        print("Game Over")
     except rospy.ROSInterruptException:
         pass
