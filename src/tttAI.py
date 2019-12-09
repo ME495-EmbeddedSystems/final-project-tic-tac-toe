@@ -45,7 +45,7 @@ def displayFace(mode):
     if mode == 1:
         filepath = pkgpath + "/images/win" + str(randrange(4)) + ".jpg"
     if mode == 2:
-        filepath = pkgpath + "/images/lose" + str(randrange(4)) + ".jpg"
+        filepath = pkgpath + "/images/lose.jpg"
     if mode == 11:
         filepath = pkgpath + "/images/board.jpg"
     if mode == 22:
@@ -73,14 +73,17 @@ def isGameOver(b):
 
     testWin = [0,0,0,0,0,0,0,0,0]
     for i in range(3):
-        testWin[i] = abs(np.sum(rows[i]))
-        testWin[i+3] = abs(np.sum(cols[i]))
-    testWin[6] = abs(np.sum(diags[0]))
-    testWin[7] = abs(np.sum(diags[1]))
+        testWin[i] = np.sum(rows[i])
+        testWin[i+3] = np.sum(cols[i])
+    testWin[6] = np.sum(diags[0])
+    testWin[7] = np.sum(diags[1])
 
     for i in range(8):
-        if testWin[i] == 3:
-            displayFace(1)
+        if abs(testWin[i]) == 3:
+            if testWin[i] < 0:
+                displayFace(2)
+            else:
+                displayFace(1)
             return True
 
     if moves == 9:
@@ -282,6 +285,7 @@ def waitKey():
 
 def Update(camera):
     rospy.sleep(1)
+    displayFace(22)
     print("Press Enter to continue...")
     waitKey()
     camera.cameras.start_streaming(camera.argsCamera)
@@ -290,11 +294,14 @@ def Update(camera):
         rospy.sleep(1)
     camera.cameras.stop_streaming(camera.argsCamera)
     rospy.sleep(1)
+    if not isGameOver(camera.gamestate):
+        displayFace(11)
+    else:
+        return (0,0),-1
     move,shape = findNextMove(rotateBoard(camera.gamestate), 1)
     #print_array(rotateBoard(camera.gamestate))
     #print(move)
-    if not isGameOver(camera.gamestate):
-        displayFace(11)
+
     print(":" + str(move))
     print(":" + str(shape))
     if move[0] == -1:
