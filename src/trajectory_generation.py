@@ -144,6 +144,7 @@ class TrajGen(object):
 
             elif self.object_2_draw == "end":
                 #TODO
+                self.gameRunning == False
                 pass
 
         #if we are holding (move up or down)

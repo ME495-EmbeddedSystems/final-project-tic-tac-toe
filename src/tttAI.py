@@ -2,7 +2,10 @@
 
 from __future__ import print_function
 import numpy as np
-import rospy
+import intera_interface
+from random import randrange
+#import intera_external_devices as kb
+import keyboard as kb
 
 def printe(string):
     print(string, end='')
@@ -28,6 +31,51 @@ def findXYOffset(tuple):
     unitScale = 1 #use this for changing units from cm
     return (xOffset*unitScale,yOffset*unitScale)
 
+def displayFace():
+    _head = intera_interface.Head()
+    head_display = intera_interface.HeadDisplay()
+    filepath = "images/win" + str(randrange(4)) + ".jpg"
+    head_display.display_image(filepath)
+
+def isGameOver(b):
+    # could potentially return shape of winner if need be
+    board = np.copy(b)
+    moves = 0
+    for i in range(3):
+        for k in range(3):
+            if board[i][k] == 2:
+                board[i][k] = -1
+            if board[i][k] != 0:
+                moves += 1
+    if moves == 9:
+        return True
+    rows = np.copy(board)
+    cols = np.copy(board).T
+    diags = np.array([[0,0,0],[0,0,0]])
+    for i in range(3):
+        diags[0][i] = board[i][i]
+        diags[1][i] = board[i][2-i]
+
+    testWin = [0,0,0,0,0,0,0,0,0]
+    for i in range(3):
+        testWin[i] = abs(np.sum(rows[i]))
+        testWin[i+3] = abs(np.sum(cols[i]))
+    testWin[6] = abs(np.sum(diags[0]))
+    testWin[7] = abs(np.sum(diags[1]))
+
+    for i in range(8):
+        if testWin[i] == 3:
+            displayFace()
+            return True
+    return False
+
+
+
+
+
+
+
+
 def findNextMove(gameboard, robot_player):
     nextMove = [-1, -1]
     rowSize = 3
@@ -44,6 +92,11 @@ def findNextMove(gameboard, robot_player):
             raise TypeError("Tic Tac Toe Board expected " + str(colSize) + " columns, got " + str(len(gameboard[i])))
     ###
 
+    #test for gameover
+    if isGameOver(gameboard):
+        print("GO")
+        return (0,0),-1
+
     #test to see if it is the robots turn
     currentMove = 0
     total_robot_moves = 0
@@ -59,16 +112,16 @@ def findNextMove(gameboard, robot_player):
 
     if(total_robot_moves > total_other_moves):
         print("Not the robots turn")
-        return (-1,-1)
+        return (-1,-1), 0
     ###
 
     #hard coded first move (go for center)
     if currentMove == 0:
-        return (1,1)
+        return (1,1), 1
     if currentMove == 1:
         if gameboard[1][1] == 0:
-            return (1,1)
-        return (0,0)
+            return (1,1), 1
+        return (0,0), 1
     ###
 
     weights = [[0,0,0],[0,0,0],[0,0,0]]
@@ -178,7 +231,7 @@ def findNextMove(gameboard, robot_player):
                 maxWeight = test_weight
                 coor = (i,k)
 
-    return coor
+    return coor, 1
 
 def convertCoor(tuple):
     return (-tuple[0]+1,-tuple[1]+1)
@@ -201,29 +254,39 @@ def rotateBoard(board):
             newBoard[2-i][2-k] = board[i][k]
     return newBoard
 
+def waitKey():
+    # blocks until keypressed is Escape or Enter
+    kb.getch()
+    print("CONTINUE KEY ACCEPTED")
+
+
 def Update(camera):
-    rospy.sleep(3)
+    rospy.sleep(1)
+    waitKey()
     camera.cameras.start_streaming(camera.argsCamera)
     camera.once = False
     while(not camera.once):
         rospy.sleep(1)
     camera.cameras.stop_streaming(camera.argsCamera)
     rospy.sleep(1)
-    move = findNextMove(rotateBoard(camera.gamestate), 1)
+    move,shape = findNextMove(rotateBoard(camera.gamestate), 1)
     #print_array(rotateBoard(camera.gamestate))
     #print(move)
     if move[0] == -1:
         return (0,0),0
     if move[1] == -1:
         return (0,0),0
+    if shape == -1:
+        return (0,0),-1
     return move,1
 
 if __name__ == "__main__":
-    rospy.init_node("sawyer")
+    board = [[1,0,2],[0,1,0],[2,0,1]]
+    print_array(board)
+    print()
+    waitKey()
 
-    board = [[0,0,0],[0,0,0],[0,0,0]]
     bot = 1
-    move = findNextMove(board,bot)
+    move,shape = findNextMove(board,bot)
     print("Move: " + str(move))
-    print(findXYOffset(move))
-    rospy.spin()
+    print("Shape: " + str(shape))
