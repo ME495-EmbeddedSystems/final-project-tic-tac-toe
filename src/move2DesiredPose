@@ -24,7 +24,6 @@ class Move2DesiredPose(object):
 
         self._limb = intera_interface.Limb("right")
         self._head = intera_interface.Head()
-        self._head.set_pan(-0.25)
         # self.head_display = intera_interface.HeadDisplay()
         # filepath = "images/win" + str(randrange(4)) + ".jpg"
         # self.head_display.display_image(filepath)
@@ -160,8 +159,12 @@ def main():
         eePoseController._limb.set_joint_positions(joint_angles)
 
         eePoseController.publishWrench()
+<<<<<<< HEAD
         # print(eePoseController.wrenchMsg.wrench.force.z)
     print("GAME OVER")
+=======
+        eePoseController._head.set_pan(-joint_angles["right_j0"])
+>>>>>>> 7d56ec75cdb73eda985036371b09484c698a9d90
 
 if __name__ == '__main__':
     try:
