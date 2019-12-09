@@ -32,6 +32,7 @@ class TrajGen(object):
         global TF, DIST_THRE, LINE_LENGTH, HOLD_TIME, CHECKER_CENTER_COORD, FROM_CENTER_D
 
         self._limb = intera_interface.Limb("right")
+        self._head = intera_interface.Head()
         self.center = np.array([])
         self.target_list = []
         self.draw_status_list = []
@@ -208,7 +209,9 @@ class TrajGen(object):
                              'right_j5': -0.679075195313,
                              'right_j6': -1.51012792969}
 
+        self._head.set_pan(-joint_angles["right_j0"])
         self._limb.move_to_joint_positions(joint_angles)
+
 
 
     def setup_cross_params(self):
