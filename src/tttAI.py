@@ -166,7 +166,7 @@ def findNextMove(gameboard, robot_player):
 
 
 
-    print_array(weights)
+    #print_array(weights)
 
     maxWeight = -1
     coor = (-1,-1)
@@ -174,7 +174,7 @@ def findNextMove(gameboard, robot_player):
         for k in range(3):
             test_weight = weights[i][k]
             if test_weight > maxWeight:
-                print(test_weight)
+                #print(test_weight)
                 maxWeight = test_weight
                 coor = (i,k)
 
@@ -210,8 +210,8 @@ def Update(camera):
     camera.cameras.stop_streaming(camera.argsCamera)
     rospy.sleep(1)
     move = findNextMove(rotateBoard(camera.gamestate), 1)
-    print_array(rotateBoard(camera.gamestate))
-    print(move)
+    #print_array(rotateBoard(camera.gamestate))
+    #print(move)
     if move[0] == -1:
         return (0,0),0
     if move[1] == -1:
@@ -221,7 +221,7 @@ def Update(camera):
 if __name__ == "__main__":
     rospy.init_node("sawyer")
 
-    board = [[2,1,2],[2,1,1],[1,2,0]]
+    board = [[0,0,0],[0,0,0],[0,0,0]]
     bot = 1
     move = findNextMove(board,bot)
     print("Move: " + str(move))
