@@ -11,7 +11,7 @@ from trajectory_generation import TrajGen
 import intera_interface
 from random import randrange
 
-class Move2DesiredPose(object):
+class TicTacToe(object):
 
     def __init__(self):
         # initializing the member variables
@@ -88,7 +88,7 @@ def main():
     rospy.init_node('move_to_desired_pose', anonymous=True)
 
     print("Starting program")
-    eePoseController = Move2DesiredPose()
+    eePoseController = TicTacToe()
     trajectoryGenerator = TrajGen()
     while (not rospy.is_shutdown()) & trajectoryGenerator.gameRunning:
         trajectoryGenerator.update_trajectory_status()

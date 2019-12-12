@@ -1,9 +1,5 @@
-# ME 495 Final Project - Tic Tac Toe on Sawyeri
-Rico test 
+# ME 495 Final Project - Tic Tac Toe on Sawyer
 
-This change is to test a pull request.
+## Usage
 
-This is to change mike's point
-
-Rico: Another test - request change on it pls
-Rico: pull-request follow-up commit is done
+Call `rosrun part_b ddrive.launch mode:=X`.
