@@ -4,7 +4,7 @@
 The Tic Tac Toe artist is a Sawyer robot based interactive robot Tic Tac Toe player. This project allows a human to play against the Sawyer on a dry erase board. At the current stage development, the robot goes first and uses the [perfect Tic Tac Toe strategy](https://www.wikihow.com/Win-at-Tic-Tac-Toe) (basically you cannot win the robot, and this brutality will be neutralized as part of the future work).
 
 ##### Game Demonstration
-[![Screenshot from 2019-12-13 13-39-59](https://user-images.githubusercontent.com/39393023/70827219-61c46f80-1dae-11ea-81c7-01a2741d246f.png)](https://youtu.be/F6CpxoHknUA)
+[![Screenshot from 2019-12-13 13-39-59](https://user-images.githubusercontent.com/39393023/70827219-61c46f80-1dae-11ea-81c7-01a2741d246f.png)](https://youtu.be/J4vcd4qHMO0)
 
 ## Overview
 The simple game of Tic-Tac-Toe is typically played on a drawing board when a human versus another human or on a digital screen when it is human versus computer. This project seeks to allow a human to play against a computer on a dry erase board. To fulfill this objective, we programmed the Sawyer robot arm to execute three objectives: read the current board state, compute its next optimal move, and perform the trajectory needed to draw an X in that board space.
