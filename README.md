@@ -17,7 +17,9 @@ The Tic Tac Toe artist is a Sawyer robot based interactive robot Tic Tac Toe pla
 
 ### Usage
 - To correctly set up the game, the dry erase board is required with a fiducial point for board orientation recognition. Use the two clamps to secure the board to the table.
+
 ![Screenshot from 2019-12-13 13-14-38](https://user-images.githubusercontent.com/39393023/70825660-90404b80-1daa-11ea-80b3-6a5e40704f1a.png)
+
 - On your game computer, Run `rosrun final-project-tic-tac-toe tic_tac_toe`. Make sure board is not further than 5 cm from the end effector along the vertical direction. Otherwise, initial interaction force might be more than desired.
 - When you play the game, hit enter to signal the computer that you have made your move.
 
