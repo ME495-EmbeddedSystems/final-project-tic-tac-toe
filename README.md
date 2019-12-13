@@ -77,7 +77,7 @@ For each cropped space image, the robot edge detects, dilates the edges to bridg
 
 Once every board space has been analyzed, the game state is updated and sent to the game AI.
 
-## TicTacToe AI
+### TicTacToe AI
 
 This part is called by the trajectory generation when it is in the camera configuration and is waiting for the human player to go. The robot's first turn is hardcoded (regardless of if the player or it goes first).  After that a weighting algorithm is used to determine the optimal move.  Each win condition, 3 rows, 3 columns, and 2 diagonals, is looped through to see how many Xs and how many Os are in it.  Each win condition is then given a weight corresponding to the total number of robot moves in that win condition and subtracting the player moves (ie. a row with an X and an O in it has a net sum of 0.  While a row with just an X has a net sum of +1).  Win conditions with two of the same symbol are weighted that are not blocked are weighted more heavily with even more weight being given if those symbols correspond to the robot.  The weights are then overlapped onto a 3x3 matrix to give a weight map of the board, with the highest weight being the cell that the robot play in next.
 
