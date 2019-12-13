@@ -240,3 +240,11 @@ class Camera(object):
         cameras.stop_streaming(args.camera)
 
         return
+
+    def updateBoard(self):
+        self.cameras.start_streaming(self.argsCamera)
+        self.once = False
+        while(not self.once):
+            rospy.sleep(1)
+        self.cameras.stop_streaming(self.argsCamera)
+        return self.gamestate

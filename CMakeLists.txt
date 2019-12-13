@@ -165,7 +165,11 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
  install(PROGRAMS
-#   scripts/my_python_script
+   src/tic_tac_toe
+   src/trajectory_generation.py
+   src/tttAI.py
+   src/keyboard.py 
+   src/game_state.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}/src
  )
 
