@@ -1,22 +1,17 @@
 #!/usr/bin/env python
-"""  A test node to move the end effector to the desired pose
- SUBSCRIBERS:
-  +
-  +
-PUBLISHERS:
+"""  The main node that is called. It receives the desired position on plane and, control the force
+PUBLISHER:
   + /ee_wrench(geometry_msgs/WrenchStamped)
-  +
 """
 
 import rospy
 
 from geometry_msgs.msg import Pose, WrenchStamped
-
 from trajectory_generation import TrajGen
-
 import intera_interface
+from random import randrange
 
-class Move2DesiredPose(object):
+class TicTacToe(object):
 
     def __init__(self):
         # initializing the member variables
@@ -24,6 +19,7 @@ class Move2DesiredPose(object):
         self.wrenchMsg = WrenchStamped()
 
         self._limb = intera_interface.Limb("right")
+        self._head = intera_interface.Head()
         self._gripper = intera_interface.Gripper()
 
         self.initial_t = rospy.Time.now().to_sec()
@@ -33,16 +29,6 @@ class Move2DesiredPose(object):
         self.initialPose = self._limb.endpoint_pose()
 
         self.maneuver_time = 4.0;
-
-        # self.targetEePose.position.x = 0.1 + self.initialPose['position'].x
-        # self.targetEePose.position.y = 0.1 + self.initialPose['position'].y
-        # self.targetEePose.position.z = 0.0 + self.initialPose['position'].z
-
-        # self.targetEePose.orientation.x = 1.0
-        # self.targetEePose.orientation.y = 0.0
-        # self.targetEePose.orientation.z = 0.0
-        # self.targetEePose.orientation.w = 0.0
-
         self.targetEePose.orientation.x = -0.7071068
         self.targetEePose.orientation.y = 0.7071068
         self.targetEePose.orientation.z = 0.0
@@ -55,36 +41,12 @@ class Move2DesiredPose(object):
         self.previousMode = 99
         self.modeChanged = False
 
-        self.gripper_close()
-        #self.gripper_open()
-
-    def advance(self):
-        # joint commands are sent in this function
-        t = rospy.Time.now().to_sec() - self.initial_t;
-        s = 3.0/(self.maneuver_time**2)*t**2 - 2.0/(self.maneuver_time**3)*t**3
-        self.currentPose = self._limb.endpoint_pose()
-        if(t > self.maneuver_time):
-            s = 1
-        self.desiredEePose.position.x = self.initialPose['position'].x + s * (self.targetEePose.position.x - self.initialPose['position'].x)
-        self.desiredEePose.position.y = self.initialPose['position'].y + s * (self.targetEePose.position.y - self.initialPose['position'].y)
-        # self.desiredEePose.position.z = self.initialPose['position'].z + s * (self.targetEePose.position.z - self.initialPose['position'].z)
-        self.desiredEePose.position.z = self.currentPose['position'].z - self.desiredZposInRightHand # force control
-
-        self.desiredEePose.orientation = self.targetEePose.orientation
-
-        # print(self.desiredEePose.position)
-
-
-        joint_angles = self._limb.ik_request(self.desiredEePose)
-        self._limb.set_joint_positions(joint_angles)
-
     def forceControl(self):
         # desired z position relative to the end effector is calculated with a simple P controller.
         self.currentPose = self._limb.endpoint_pose()
         self.currentEffort = self._limb.endpoint_effort()
         self.desiredZposInRightHand = self.desiredZposInRightHand + self.kP * (self.desiredEEForce - self.currentEffort['force'].z)
         self.desiredEePose.position.z = self.currentPose['position'].z - self.desiredZposInRightHand  # force control
-        # print(self.desiredEePose.position.z)
 
     def gripper_open(self):
         self._gripper.open()
@@ -109,12 +71,13 @@ class Move2DesiredPose(object):
         self.wrenchPublisher.publish(self.wrenchMsg)
 
     def modeO(self):
+        # Marker moves in the air ( No force control)
         if(self.modeChanged is True):
             self.currentPose = self._limb.endpoint_pose()
             self.desiredEePose.position.z = self.currentPose['position'].z
-            # print(self.desiredEePose.position.z)
 
     def modeMinus1(self):
+        # Marker loses it contact with the board ( No force control)
         if(self.modeChanged is True):
             self.currentPose = self._limb.endpoint_pose()
             self.desiredEePose.position.z = self.currentPose['position'].z + 0.015
@@ -123,13 +86,15 @@ class Move2DesiredPose(object):
 def main():
     """ The main() function. """
     rospy.init_node('move_to_desired_pose', anonymous=True)
-    eePoseController = Move2DesiredPose()
+
+    print("Starting program")
+    eePoseController = TicTacToe()
     trajectoryGenerator = TrajGen()
-    # eePoseController.gripper_close()
-    # eePoseController.gripper_open()
-    while not rospy.is_shutdown():
+    while (not rospy.is_shutdown()) & trajectoryGenerator.gameRunning:
         trajectoryGenerator.update_trajectory_status()
         [eePoseController.desiredEePose.position.x, eePoseController.desiredEePose.position.y] = trajectoryGenerator.get_xy()
+        if trajectoryGenerator.object_2_draw == "end":
+            break
         eePoseController.desiredEePose.orientation = eePoseController.targetEePose.orientation
 
         if(eePoseController.previousMode is not trajectoryGenerator.get_draw_status()):
@@ -144,22 +109,17 @@ def main():
         elif (trajectoryGenerator.get_draw_status() == -1):
             eePoseController.modeMinus1()
 
-
         eePoseController.previousMode = trajectoryGenerator.get_draw_status()
-
-        # eePoseController.desiredEePose.position.x = eePoseController.initialPose['position'].x
-        # eePoseController.desiredEePose.position.y = eePoseController.initialPose['position'].y
-        # eePoseController.desiredEePose.position.z = eePoseController.initialPose['position'].z
-        # eePoseController.forceControl()
 
         joint_angles = eePoseController._limb.ik_request(eePoseController.desiredEePose)
         eePoseController._limb.set_joint_positions(joint_angles)
 
         eePoseController.publishWrench()
-        # print(eePoseController.wrenchMsg.wrench.force.z)
+        eePoseController._head.set_pan(-joint_angles["right_j0"])
 
 if __name__ == '__main__':
     try:
         main()
+        print("Game Over")
     except rospy.ROSInterruptException:
         pass

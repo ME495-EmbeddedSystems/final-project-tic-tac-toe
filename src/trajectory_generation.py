@@ -17,7 +17,11 @@ FROM_CENTER_D = 0.01*(7.0+1.8)
 GREEN_POINT_COORD = np.array([0.6263453770987546, -0.12562004467910037])
 #TESTING
 #CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.01, 0.01])
+<<<<<<< HEAD
 CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.015, 0.020])
+=======
+CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.012, 0.020])
+>>>>>>> bbcae38da3bb83cdfbc361006b337412e7a409bd
 
 def InsideDistThresh(pos_start, pos_end, DIST_THRE):
     #Checks if two points' x,y position difference is larger than DIST_THRE
@@ -32,6 +36,7 @@ class TrajGen(object):
         global TF, DIST_THRE, LINE_LENGTH, HOLD_TIME, CHECKER_CENTER_COORD, FROM_CENTER_D
 
         self._limb = intera_interface.Limb("right")
+        self._head = intera_interface.Head()
         self.center = np.array([])
         self.target_list = []
         self.draw_status_list = []
@@ -116,9 +121,10 @@ class TrajGen(object):
 
                         #next action is idle
                         self.object_2_draw = "idle"
-                        while self.object_2_draw == "idle":
+                        while (self.object_2_draw == "idle") & (self.object_2_draw != "end"):
                             self.get_next_object_center()
-
+                        if self.object_2_draw == "end":
+                            return
 
                         self.go_to_camera_or_standoff('standoff')
                         self.setup_cross_params()
@@ -133,8 +139,11 @@ class TrajGen(object):
             # if the current object to draw is idling
 
             elif self.object_2_draw == "idle":
-                while self.object_2_draw == 'idle':
+                while (self.object_2_draw == 'idle') & (self.object_2_draw != "end"):
                     self.get_next_object_center()
+
+                if(self.object_2_draw == "end"):
+                    return
 
                 self.go_to_camera_or_standoff('standoff')
                 self.setup_cross_params()
@@ -144,6 +153,7 @@ class TrajGen(object):
 
             elif self.object_2_draw == "end":
                 #TODO
+                self.gameRunning == False
                 pass
 
         #if we are holding (move up or down)
@@ -159,11 +169,15 @@ class TrajGen(object):
         #call AI function to get center, object to draw
         # bennett function gets called
 
+        if self.object_2_draw == "end":
+            self.gameRunning = False
+            return
         boardCoordinate,shapeInt = ai.Update(self.camera)
         robotCoordinate = ai.convertCoor(boardCoordinate)
         shapeString = ai.convertShape2String(shapeInt)
 
         print(robotCoordinate)
+        print(shapeString)
         self.object_2_draw = shapeString
         if shapeString == "idle":
             return
@@ -208,7 +222,9 @@ class TrajGen(object):
                              'right_j5': -0.679075195313,
                              'right_j6': -1.51012792969}
 
+        self._head.set_pan(-joint_angles["right_j0"])
         self._limb.move_to_joint_positions(joint_angles)
+
 
 
     def setup_cross_params(self):
@@ -284,6 +300,9 @@ class TrajGen(object):
             #test
             #print "get_xy_idle"
             coord = self.current_target
+
+        elif self.object_2_draw == "end":
+            return [0,0]
 
         return coord
 

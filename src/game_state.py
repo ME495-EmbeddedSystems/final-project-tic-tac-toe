@@ -18,6 +18,7 @@ import argparse
 from cv_bridge import CvBridge, CvBridgeError
 import rospy
 import intera_interface
+import rospkg
 
 class Camera(object):
 
@@ -118,13 +119,19 @@ class Camera(object):
                 continue
 
             # Determine if the space is filled by an X or O
-            print(cv.contourArea(largest_ct))
+            #print(cv.contourArea(largest_ct))
 
+
+<<<<<<< HEAD
             # display image
             #print(str(board_index))
             cv.imshow('image', img)
             cv.waitKey(250)
             cv.destroyAllWindows()
+=======
+
+
+>>>>>>> bbcae38da3bb83cdfbc361006b337412e7a409bd
 
 
             if cv.contourArea(largest_ct) > 1000:
@@ -137,19 +144,33 @@ class Camera(object):
                 except ZeroDivisionError:
                     solidity = -100
 
+                #print(solidity)
+
+                # display image
+                #print(str(board_index))
+                #cv.imshow('image', img)
+                #cv.waitKey(0)
+                #cv.destroyAllWindows()
+
 
                 # Fill the corresponding gamestate space
-                if(solidity > 0.5):
+                if(solidity > 0.6):
                         # Fill in O
                         gamestate[board_index] = 2
                 else:
                         # Fill in X
                         gamestate[board_index] = 1
 
+        rospack = rospkg.RosPack()
+        pkgpath = rospack.get_path('final-project-tic-tac-toe')
+
+        dim = (1024,600)
+        resize = cv.resize(img, dim)
+        cv.imwrite(pkgpath + '/images/board.jpg', resize)
         #print the gamestate
-        print(gamestate)
+        #print(gamestate)
         self.gamestate = np.reshape(gamestate, (3,3))
-        print(self.gamestate)
+        #print(self.gamestate)
         self.once = True
         #print(self.gamestate)
         return
