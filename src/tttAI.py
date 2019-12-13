@@ -10,9 +10,15 @@ import rospy
 import rospkg
 
 def printe(string):
+    """
+    Prints the string without adding a newline
+    """
     print(string, end='')
 
 def print_array(gameboard):
+    """
+    Prints an array in a comma separated format
+    """
     print()
     for i in range(len(gameboard)):
         for j in range(len(gameboard[i])):
@@ -21,6 +27,9 @@ def print_array(gameboard):
         print()
 
 def findXYOffset(tuple):
+    """
+    Old implementation of implementing cell to cm conversion
+    """
     homeX = -4.5
     homeY = 4.5
     baseX = -9
@@ -34,6 +43,15 @@ def findXYOffset(tuple):
     return (xOffset*unitScale,yOffset*unitScale)
 
 def displayFace(mode):
+    """
+    Displays a face on the sawyer robot corresponding to a mode:
+    0: display a face for a Tie
+    1: display a face for a Win
+    2: display a face for a Loss
+    11: display a face for Robot's turn
+    22: display a face for the Player's turn
+    """
+
     _head = intera_interface.Head()
     head_display = intera_interface.HeadDisplay()
 
@@ -55,7 +73,10 @@ def displayFace(mode):
     head_display.display_image(filepath)
 
 def isGameOver(b):
-    # could potentially return shape of winner if need be
+    """
+    Returns True if the game is over (either board is full or 3 in a row)
+    Also returns the player that won if 3 in a row are detected
+    """
     board = np.copy(b)
     moves = 0
     for i in range(3):
@@ -93,12 +114,12 @@ def isGameOver(b):
 
 
 
-
-
-
-
-
 def findNextMove(gameboard, robot_player):
+    """
+    Given a 3x3 gameboard filled with 0 (no move), 1 (X), or 2 (O)
+    Return a tuple corresponding to a cell on the tictactoe board
+    Also return the shape to be drawn at that cell
+    """
     nextMove = [-1, -1]
     rowSize = 3
     colSize = 3
@@ -259,9 +280,15 @@ def findNextMove(gameboard, robot_player):
     return coor, 1
 
 def convertCoor(tuple):
+    """
+    Convert cell tuple from Bennett's gameboard numbering to Rico's numbering
+    """
     return (-tuple[0]+1,-tuple[1]+1)
 
 def convertShape2String(shapeInt):
+    """
+    Get the string corresponding to shape integer
+    """
     if shapeInt == -1:
         return "end"
     if shapeInt == 0:
@@ -273,6 +300,10 @@ def convertShape2String(shapeInt):
     return "error"
 
 def rotateBoard(board):
+    """
+    Rotate board from wrist camera
+    (since wrist camera is upside down)
+    """
     newBoard = np.copy(board)
     for i in range(3):
         for k in range(3):
@@ -280,12 +311,22 @@ def rotateBoard(board):
     return newBoard
 
 def waitKey():
-    # blocks until keypressed is Escape or Enter
+    """
+    Blocking function to wait for Enter key (or Escape key) to be pressed
+    """
     kb.getch()
     print("CONTINUE KEY ACCEPTED")
 
 
 def Update(camera):
+    """
+    This function takes the camera object from game_state.py
+    It enables the camera, waits for a new picture to be taken, and then disables the camera
+    It then uses the gameboard saved in the camera object
+    (which has been updated now that the camera has taken a new picture)
+    to find the cell where the next shape should be drawn.
+    It returns a cell and a shape corresponding to that position and which shape the robot is playing as
+    """
     rospy.sleep(1)
     camera.updateBoard()
     print(camera.gamestate)
@@ -324,6 +365,9 @@ def Update(camera):
     return move,1
 
 if __name__ == "__main__":
+    """
+    Testing for tttAI.py done through running this pyhton script directly
+    """
     rospy.init_node('saw')
     board = [[1,1,2],[2,2,1],[1,1,1]]
     print_array(board)
