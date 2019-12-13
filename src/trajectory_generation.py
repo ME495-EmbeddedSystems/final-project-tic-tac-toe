@@ -51,6 +51,7 @@ class TrajGen(object):
 
         # michael camera object to pass to bennett
         self.camera = gs.Camera()
+        self.camera.updateBoard()
         self.gameRunning = True
 
         #Test

@@ -81,15 +81,15 @@ def isGameOver(b):
     for i in range(8):
         if abs(testWin[i]) == 3:
             if testWin[i] < 0:
-                displayFace(2)
-            else:
-                displayFace(1)
-            return True
+                #displayFace(2)
+                return True,2
+            #displayFace(1)
+            return True,1
 
     if moves == 9:
         displayFace(0)
-        return True
-    return False
+        return True, 0
+    return False, 0
 
 
 
@@ -116,8 +116,10 @@ def findNextMove(gameboard, robot_player):
 
     print_array(gameboard)
     #test for gameover
-    if isGameOver(gameboard):
+    go,face = isGameOver(gameboard)
+    if go:
         #print("GO")
+        displayFace(face)
         return (0,0),-1
 
     #test to see if it is the robots turn
@@ -285,18 +287,27 @@ def waitKey():
 
 def Update(camera):
     rospy.sleep(1)
-    displayFace(22)
-    print("Press Enter to continue...")
-    waitKey()
+    camera.updateBoard()
+    print(camera.gamestate)
+    go, face = isGameOver(camera.gamestate)
+    if go:
+        displayFace(face)
+        return (0,0),-1
+    if np.sum(camera.gamestate) != 0:
+        displayFace(22)
+        print("Press Enter to continue...")
+        waitKey()
     camera.cameras.start_streaming(camera.argsCamera)
     camera.once = False
     while(not camera.once):
         rospy.sleep(1)
     camera.cameras.stop_streaming(camera.argsCamera)
     rospy.sleep(1)
-    if not isGameOver(camera.gamestate):
+    go, face = isGameOver(camera.gamestate)
+    if not go:
         displayFace(11)
     else:
+        displayFace(face)
         return (0,0),-1
     move,shape = findNextMove(rotateBoard(camera.gamestate), 1)
     #print_array(rotateBoard(camera.gamestate))
