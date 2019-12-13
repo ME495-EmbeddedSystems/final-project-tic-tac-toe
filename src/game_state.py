@@ -112,8 +112,6 @@ class Camera(object):
 
             cv.drawContours(space, contours, large_cnt_index, (255,0,0), 2)
 
-
-
             try:
                 largest_ct = contours[large_cnt_index]
             except IndexError:
@@ -121,8 +119,6 @@ class Camera(object):
 
             # Determine if the space is filled by an X or O
             print(cv.contourArea(largest_ct))
-
-
 
             # display image
             #print(str(board_index))

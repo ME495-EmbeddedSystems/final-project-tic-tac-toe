@@ -9,7 +9,7 @@ import tttAI as ai
 
 TF = 3
 DIST_THRE = 0.003
-LINE_LENGTH = 0.06
+LINE_LENGTH = 0.04
 HOLD_TIME = 2.5
 FROM_CENTER_D = 0.01*(7.0+1.8)
 #This is the desired elbow camera pose. Modify for your application
@@ -17,7 +17,7 @@ FROM_CENTER_D = 0.01*(7.0+1.8)
 GREEN_POINT_COORD = np.array([0.6263453770987546, -0.12562004467910037])
 #TESTING
 #CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.01, 0.01])
-CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.010, 0.020])
+CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.015, 0.020])
 
 def InsideDistThresh(pos_start, pos_end, DIST_THRE):
     #Checks if two points' x,y position difference is larger than DIST_THRE

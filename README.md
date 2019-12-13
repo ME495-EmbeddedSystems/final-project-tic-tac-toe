@@ -8,10 +8,12 @@ The simple game of Tic-Tac-Toe is typically played on a drawing board when a hum
 ### Equipment
 * Sawyer arm
 * Handheld dry erase board (with electrical tape as the board lines)
-* Dry erase marker
+* 2 Dry erase markers
 * Eraser
+* 2 Clamps
+* Table
 
-
+1. 
 
 
 
