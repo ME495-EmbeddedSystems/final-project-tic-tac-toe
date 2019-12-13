@@ -75,7 +75,7 @@ For each cropped space image, the robot edge detects, dilates the edges to bridg
 
 Once every board space has been analyzed, the game state is updated and sent to the game AI.
 
-##Future Work
+## Future Work
 - Currently the robot can only draw crosses. Therefore, drawing circles will be a desirable feature.
 - A "kid" mode should be added so the game does not always play perfectly, especially in front of kids (Yep, hopefully kids will like this)
-- As of now, this program is only compatible with the dry erase board that was used for the demonstration. We would like to play a tic tac toe game with the Sawyer on any board with minimal setup. Simply drawing the game board grid before playing a game would make this project more accessible -- no tape or hard-coded measurements required. 
+- As of now, this program is only compatible with the dry erase board that was used for the demonstration. We would like to play a tic tac toe game with the Sawyer on any board with minimal setup. Simply drawing the game board grid before playing a game would make this project more accessible -- no tape or hard-coded measurements required.
