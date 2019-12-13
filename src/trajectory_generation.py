@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+'''
+This file contains functions for interfacing with:
+    1. Tic Tac Toe node: 
+        a. TrajGen.update_trajectory_status()    - update trajectory generator status
+        b. TrajGen.get_xy()                      - Update the (x,y) point of the next waypoint
+        c. TrajGen.get_draw_status()             - Update the drawing status of a point
+'''
 import intera_interface
 import rospy
 import numpy as np
@@ -16,10 +23,13 @@ FROM_CENTER_D = 0.01*(7.0+1.8)
 #Coordinate of the marking. Modify for your application
 GREEN_POINT_COORD = np.array([0.6263453770987546, -0.12562004467910037])
 #TESTING
+<<<<<<< HEAD
 #CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.01, 0.01])
 <<<<<<< HEAD
 CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.015, 0.020])
 =======
+=======
+>>>>>>> 18091ca046360e367ac3668f477d98281dbde83b
 CHECKER_CENTER_COORD = np.array([0.7267684830590353, 0.04111839299227235])+ np.array([0.012, 0.020])
 >>>>>>> bbcae38da3bb83cdfbc361006b337412e7a409bd
 
@@ -58,14 +68,6 @@ class TrajGen(object):
         self.camera.updateBoard()
         self.gameRunning = True
 
-        #Test
-        #print self._limb.endpoint_pose()
-        # self.object_2_draw = "cross"
-        # self.go_to_camera_or_standoff('standoff')
-        # self.center = [CHECKER_CENTER_COORD[0]   -1.0* FROM_CENTER_D,CHECKER_CENTER_COORD[1]  + 1.0*FROM_CENTER_D]
-        # #print "center: ", self.center
-        # self.setup_cross_params()
-
 
 
     def update_trajectory_status(self):
@@ -77,12 +79,7 @@ class TrajGen(object):
         if self.if_hold != 1:
 
             if self.object_2_draw == "cross":
-                #print("entering")
-                #print "draw_status", self.current_draw_status
-                #print "s: ", self.s
                 current_pose = self.update_current_pose()
-                # if InsideDistThresh( current_pose, self.current_target, DIST_THRE ):
-                #print"this is cross"
                 if (self.s == 1):
                     self.s = 0
                     #Last point of action has not been reached yet
@@ -92,7 +89,6 @@ class TrajGen(object):
                         # If we should hold (go up or down)
                         #print self.center
                         if (self.if_hold == 0) and np.array_equal(self.target_list[0], self.current_target):
-                            #print "current target: ", self.current_target, "| target_list: ", self.target_list
                             self.if_hold = 1
                             self.hold_init_time = rospy.Time.now().to_sec()
                             self.line_init_time = rospy.Time.now().to_sec()
@@ -117,8 +113,6 @@ class TrajGen(object):
                         #sleep till arm stablizes
                         rospy.sleep(0.5)
                         self.go_to_camera_or_standoff('camera')
-                       # #checker center is the stand off position
-                       # self.go_to_checker_center()
 
                         #next action is idle
                         self.object_2_draw = "idle"
@@ -129,15 +123,6 @@ class TrajGen(object):
 
                         self.go_to_camera_or_standoff('standoff')
                         self.setup_cross_params()
-
-                        #TODO
-                        #self.setup_cross_params()
-                        #checker center is the stand off position
-                        # self.go_to_camera_or_standoff('standoff')
-                #print "s: ", self.s
-                #print "draw_status", self.current_draw_status
-                #print("exiting")
-            # if the current object to draw is idling
 
             elif self.object_2_draw == "idle":
                 while (self.object_2_draw == 'idle') & (self.object_2_draw != "end"):
@@ -153,22 +138,16 @@ class TrajGen(object):
 
 
             elif self.object_2_draw == "end":
-                #TODO
                 self.gameRunning == False
                 pass
 
         #if we are holding (move up or down)
         else:
             if rospy.Time.now().to_sec() - self.hold_init_time > HOLD_TIME:
-                #print "hold time is up"
                 self.if_hold = -1,
-                #print "current goal", self.current_target, " | target list: ", self.target_list
-
-
 
     def get_next_object_center(self):
         #call AI function to get center, object to draw
-        # bennett function gets called
 
         if self.object_2_draw == "end":
             self.gameRunning = False
@@ -187,21 +166,13 @@ class TrajGen(object):
             return
         self.center = [CHECKER_CENTER_COORD[0] + robotCoordinate[0]* FROM_CENTER_D, CHECKER_CENTER_COORD[1]  + robotCoordinate[1]* FROM_CENTER_D]
 
-        # ## TODO:
-
-        #Test
-        #print robotCoordinate
-        # if self.object_2_draw == "cross":
-        #      self.object_2_draw = "idle"
-
-
+       
 
 
     def go_to_camera_or_standoff(self,destination):
         '''
         Destination: 'camera' - camera pose; 'standoff' - stand off pose
         '''
-        #0.176208007813 -0.1716953125 -0.287819335937 0.616485351562 -2.85697167969 -2.81928320312 -4.11785449219
         joint_angles = None
         if destination == 'camera':
             joint_angles = { 'right_j0':  0.176208007813,
@@ -292,14 +263,11 @@ class TrajGen(object):
         elif self.object_2_draw == "cross":
             t = rospy.Time.now().to_sec() - self.line_init_time
             self.s = 10 * (1.0 * t / TF) ** 3 - 15 * (1.0 * t / TF) ** 4 + 6 * (1.0 * t / TF) ** 5
-            # self.s = 3.0*(t/TF)**2 - 2.0*(t/TF)**3
             if t>TF:
                 self.s = 1
             coord = self.s * np.array( self.current_target ) + (1 - self.s) * np.array(self.line_init_pose)
 
         elif self.object_2_draw == "idle":
-            #test
-            #print "get_xy_idle"
             coord = self.current_target
 
         elif self.object_2_draw == "end":
@@ -310,8 +278,7 @@ class TrajGen(object):
 
 
     def get_draw_status(self):
-        #Test
-        #print self.current_draw_status
+
         return self.current_draw_status
 
 
