@@ -4,7 +4,7 @@
 The Tic Tac Toe artist is a Sawyer robot based interactive robot Tic Tac Toe player. At the current stage development, the robot goes first and using the [perfect Tic Tac Toe strategy](https://www.wikihow.com/Win-at-Tic-Tac-Toe) (basically you cannot win the robot, and this brutality will be neutralized as part of the future work).
 
 ##### Game Demonstration
-[![Screenshot from 2019-12-13 13-39-59](https://user-images.githubusercontent.com/39393023/70827219-61c46f80-1dae-11ea-81c7-01a2741d246f.png)](https://youtu.be/F6CpxoHknUA)
+[![Screenshot from 2019-12-13 13-39-59](https://user-images.githubusercontent.com/39393023/70827219-61c46f80-1dae-11ea-81c7-01a2741d246f.png)](https://youtu.be/J4vcd4qHMO0)
 
 ## Usage
 - To correctly set up the game, external drawing board is required with a fiducial point for board orientation recognition. 
